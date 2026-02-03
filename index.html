@@ -383,6 +383,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
+    const APP_VERSION = "v3.2.0";
 
     const curatedPrograms = [
       {
@@ -792,6 +793,7 @@
     }
 
     function render() {
+      updateSubtitle();
       renderToday();
       renderPrograms();
       renderHistory();
@@ -1084,6 +1086,10 @@
             <label class="inline-note">Quick notes</label>
             <textarea id="global-notes" rows="3" placeholder="Anything about your training week…"></textarea>
           </div>
+        </div>
+        <div class="card">
+          <h2>App Version</h2>
+          <div class="inline-note">You are viewing build ${APP_VERSION}.</div>
         </div>
         <div class="card">
           <h2>Tips for iPhone</h2>
@@ -1568,6 +1574,13 @@
     function formatDate(dateKey) {
       const date = new Date(dateKey + "T00:00:00");
       return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    }
+
+    function updateSubtitle() {
+      const el = document.getElementById("subtitle");
+      if (!el) return;
+      const dateKey = state.activeDate || formatDateKey(new Date());
+      el.textContent = `Build ${APP_VERSION} · ${formatDate(dateKey)}`;
     }
 
     let timerInterval = null;

@@ -303,6 +303,50 @@
       border: 1px solid var(--border);
     }
 
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .calendar-head {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 4px 0;
+    }
+
+    .calendar-cell {
+      background: #0c131e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 0;
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .calendar-cell.today {
+      border-color: var(--accent);
+    }
+
+    .calendar-cell.selected {
+      background: rgba(77,210,255,0.2);
+      border-color: var(--accent);
+    }
+
+    .calendar-cell.has-log .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--good);
+      border-radius: 999px;
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
     .split {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -688,6 +732,9 @@
         try {
           const parsed = JSON.parse(raw);
           parsed.dayOverrides = parsed.dayOverrides || {};
+          parsed.activeDate = parsed.activeDate || new Date().toISOString().slice(0, 10);
+          parsed.units = parsed.units || "lb";
+          parsed.calendarMonth = parsed.calendarMonth || parsed.activeDate.slice(0, 7);
           return parsed;
         } catch (err) {
           console.warn("Failed to parse storage", err);
@@ -698,7 +745,10 @@
         activeProgramId: curatedPrograms[0].id,
         programStart: new Date().toISOString().slice(0, 10),
         logs: {},
-        dayOverrides: {}
+        dayOverrides: {},
+        activeDate: new Date().toISOString().slice(0, 10),
+        units: "lb",
+        calendarMonth: new Date().toISOString().slice(0, 7)
       };
     }
 
@@ -713,7 +763,14 @@
     }
 
     function getTodayKey() {
-      return new Date().toISOString().slice(0, 10);
+      return state.activeDate || formatDateKey(new Date());
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
     }
 
     function dayIndexForProgram(program, dateKey) {
@@ -762,6 +819,10 @@
           </div>
           <div style="margin-top:10px" class="row">
             <div style="flex:1">
+              <label class="inline-note">Log date</label>
+              <input type="date" value="${todayKey}" onchange="setActiveDate(this.value)" />
+            </div>
+            <div style="flex:1">
               <label class="inline-note">Pick day</label>
               <select onchange="updateDayOverride(this.value)">
                 ${program.days.map((day, dayIndex) => `
@@ -788,7 +849,7 @@
         <div class="card">
           <h2>Workout Summary</h2>
           <div class="row">
-            <span class="pill">Volume: ${Math.round(summary.totalVolume)} lb</span>
+            <span class="pill">Volume: ${formatVolume(summary.totalVolume)}</span>
             <span class="pill">Sets done: ${summary.totalSets}</span>
           </div>
           <div style="margin-top:10px">
@@ -796,6 +857,14 @@
               <div class="inline-note">${item.name}: ${Math.round(item.volume)} lb</div>
             `).join("") || '<div class="inline-note">No logged volume yet.</div>'}
           </div>
+          ${summary.prHighlights.length ? `
+            <div style="margin-top:10px">
+              <div class="inline-note">New PRs</div>
+              ${summary.prHighlights.slice(0, 3).map(item => `
+                <div class="inline-note">${item.name}: ${item.weight} x ${item.reps} (1RM ${item.e1rm.toFixed(1)})</div>
+              `).join("")}
+            </div>
+          ` : ""}
         </div>
         ` : ""}
         <div class="card">
@@ -818,8 +887,10 @@
       const sets = getSetsForExercise(exercise, exIndex, log);
       const selectedName = getSelectedExerciseName(exIndex, exercise, log);
       const history = getExerciseHistory(selectedName, 3);
-      const pr = getExercisePR(selectedName);
+      const pr = getExercisePR(selectedName, getTodayKey());
       const last = history[0];
+      const currentBest = getBestSet(log?.exercises?.[exIndex]?.sets || []);
+      const hasNewPR = currentBest && (!pr || currentBest.e1rm > pr.best1rm);
       const lastLine = last ? `Last: ${last.weight} x ${last.reps} (${formatDate(last.date)})` : "No history yet";
       const prLine = pr ? `PR 1RM: ${pr.best1rm.toFixed(1)}` : "PR 1RM: --";
 
@@ -835,10 +906,16 @@
               ${selectedName !== exercise.name ? `<div class="inline-note">Prescribed: ${exercise.name}</div>` : ""}
             </div>
             <div class="row">
+              ${hasNewPR ? '<span class="tag" style="color:var(--good)">New PR</span>' : ''}
               <span class="tag">${prLine}</span>
               <span class="tag">${lastLine}</span>
             </div>
           </div>
+          ${last ? `
+            <div class="row" style="margin-top:8px">
+              <button class="btn ghost" onclick="fillNextSet(${exIndex}, ${last.weight}, ${last.reps})">Use last: ${last.weight} x ${last.reps}</button>
+            </div>
+          ` : ""}
           ${alternatives.length ? `
             <div style="margin-top:10px">
               <label class="inline-note">Smart substitute</label>
@@ -901,6 +978,7 @@
       const view = document.getElementById("view-history");
       const logs = Object.entries(state.logs).sort((a,b) => b[0].localeCompare(a[0]));
       const topExercises = buildExerciseTrends();
+      const calendar = buildCalendar(new Date(state.activeDate));
 
       view.innerHTML = `
         <div class="card">
@@ -929,6 +1007,28 @@
           </div>
         </div>
         <div class="card">
+          <h2>Calendar</h2>
+          <div class="row" style="margin-bottom:10px">
+            <button class="btn ghost" onclick="changeCalendarMonth(-1)">Prev</button>
+            <span class="pill">${calendar.label}</span>
+            <button class="btn ghost" onclick="changeCalendarMonth(1)">Next</button>
+            <button class="btn secondary" onclick="goToToday()">Today</button>
+          </div>
+          <div class="calendar-grid">
+            ${calendar.weekdays.map(day => `<div class="calendar-head">${day}</div>`).join("")}
+            ${calendar.cells.map(cell => cell.disabled ? `
+              <div></div>
+            ` : `
+              <button class="calendar-cell ${cell.isToday ? "today" : ""} ${cell.hasLog ? "has-log" : ""} ${cell.isSelected ? "selected" : ""}"
+                onclick="setActiveDateAndOpen('${cell.dateKey}')">
+                <div>${cell.day}</div>
+                ${cell.hasLog ? '<div class="dot"></div>' : ''}
+              </button>
+            `).join("")}
+          </div>
+          <div class="inline-note" style="margin-top:8px">Tap a day to log or edit that date.</div>
+        </div>
+        <div class="card">
           <h2>Workout History</h2>
           ${logs.length === 0 ? '<p class="empty">No workouts logged yet.</p>' : ''}
           <div class="workout-list">
@@ -939,7 +1039,7 @@
                     <h4>${formatDate(date)}</h4>
                     <small>${log.programName || ''} · ${log.workoutName || ''}</small>
                   </div>
-                  <span class="tag">${log.totalVolume ? Math.round(log.totalVolume) : 0} lb</span>
+                  <span class="tag">${formatVolume(log.totalVolume ?? calculateVolume(log))}</span>
                 </div>
                 <div class="inline-note" style="margin-top:6px">${log.notes || ""}</div>
               </div>
@@ -960,6 +1060,13 @@
             <div style="flex:1">
               <label class="inline-note">Program start date</label>
               <input type="date" value="${state.programStart}" onchange="updateStartDate(this.value)" />
+            </div>
+            <div style="flex:1">
+              <label class="inline-note">Units</label>
+              <select onchange="setUnits(this.value)">
+                <option value="lb" ${state.units === "lb" ? "selected" : ""}>Pounds (lb)</option>
+                <option value="kg" ${state.units === "kg" ? "selected" : ""}>Kilograms (kg)</option>
+              </select>
             </div>
             <div style="flex:1">
               <label class="inline-note">Export / Import data</label>
@@ -1026,6 +1133,17 @@
       saveState(state);
     }
 
+    function fillNextSet(exIndex, weight, reps) {
+      ensureTodayLog();
+      const today = getTodayKey();
+      const sets = state.logs[today].exercises[exIndex].sets;
+      const target = sets.find(set => !set.weight || !set.reps) || sets[sets.length - 1];
+      target.weight = String(weight);
+      target.reps = String(reps);
+      saveState(state);
+      render();
+    }
+
     function updateExerciseSelection(exIndex, value) {
       ensureTodayLog();
       const today = getTodayKey();
@@ -1070,6 +1188,8 @@
       const log = state.logs[today];
       log.completed = markComplete;
       log.totalVolume = calculateVolume(log);
+      log.loggedAt = today;
+      log.units = state.units;
       saveState(state);
       render();
     }
@@ -1090,13 +1210,23 @@
       if (!log) return null;
       const exerciseVolumes = new Map();
       let totalSets = 0;
+      const prHighlights = [];
       log.exercises.forEach(ex => {
         const name = ex.selectedName || ex.name;
         let volume = 0;
+        const best = getBestSet(ex.sets);
+        const priorPR = getExercisePR(name, log.loggedAt || getTodayKey());
+        if (best && (!priorPR || best.e1rm > priorPR.best1rm)) {
+          prHighlights.push({ name, weight: best.weight, reps: best.reps, e1rm: best.e1rm });
+        }
         ex.sets.forEach(set => {
-          if (set.done) totalSets += 1;
           const w = parseFloat(set.weight);
           const r = parseFloat(set.reps);
+          if (!isNaN(w) && !isNaN(r)) {
+            totalSets += 1;
+          } else if (set.done) {
+            totalSets += 1;
+          }
           if (!isNaN(w) && !isNaN(r)) volume += w * r;
         });
         if (volume > 0) {
@@ -1106,6 +1236,7 @@
       return {
         totalVolume: calculateVolume(log),
         totalSets,
+        prHighlights,
         exerciseVolumes: Array.from(exerciseVolumes.entries())
           .map(([name, volume]) => ({ name, volume }))
           .sort((a, b) => b.volume - a.volume)
@@ -1136,6 +1267,38 @@
       state.programStart = value;
       saveState(state);
       render();
+    }
+
+    function setActiveDate(value) {
+      state.activeDate = value;
+      state.calendarMonth = value.slice(0, 7);
+      saveState(state);
+      render();
+    }
+
+    function setActiveDateAndOpen(value) {
+      setActiveDate(value);
+      switchTab("today");
+    }
+
+    function goToToday() {
+      const todayKey = formatDateKey(new Date());
+      state.activeDate = todayKey;
+      state.calendarMonth = todayKey.slice(0, 7);
+      saveState(state);
+      render();
+    }
+
+    function setUnits(value) {
+      state.units = value;
+      saveState(state);
+      render();
+    }
+
+    function formatVolume(value) {
+      const unit = state.units || "lb";
+      const factor = unit === "kg" ? 0.453592 : 1;
+      return `${Math.round(value * factor)} ${unit}`;
     }
 
     function updateDayOverride(value) {
@@ -1194,9 +1357,10 @@
       return best;
     }
 
-    function getExerciseHistory(exerciseName, limit = 3) {
+    function getExerciseHistory(exerciseName, limit = 3, excludeDate = null) {
       const entries = Object.entries(state.logs)
         .filter(([_, log]) => log.exercises)
+        .filter(([date]) => (excludeDate ? date !== excludeDate : true))
         .map(([date, log]) => {
           const ex = log.exercises.find(item => (item.selectedName || item.name) === exerciseName);
           return {
@@ -1216,8 +1380,8 @@
       }));
     }
 
-    function getExercisePR(exerciseName) {
-      const history = getExerciseHistory(exerciseName, 999);
+    function getExercisePR(exerciseName, excludeDate = null) {
+      const history = getExerciseHistory(exerciseName, 999, excludeDate);
       if (history.length === 0) return null;
       let best = history[0];
       history.forEach(entry => {
@@ -1320,6 +1484,51 @@
       ctx.stroke();
     }
 
+    function buildCalendar(activeDate) {
+      const [monthYear, monthNum] = (state.calendarMonth || formatDateKey(activeDate).slice(0, 7)).split("-");
+      const currentMonth = new Date(Number(monthYear), Number(monthNum) - 1, 1);
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const todayKey = formatDateKey(new Date());
+      const selectedKey = state.activeDate || todayKey;
+
+      const cells = [];
+      for (let i = 0; i < startDay; i += 1) {
+        cells.push({ day: "", dateKey: "", hasLog: false, isToday: false, isSelected: false, disabled: true });
+      }
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const dateKey = formatDateKey(new Date(year, month, day));
+        cells.push({
+          day,
+          dateKey,
+          hasLog: Boolean(state.logs[dateKey]),
+          isToday: dateKey === todayKey,
+          isSelected: dateKey === selectedKey,
+          disabled: false
+        });
+      }
+
+      return {
+        label: currentMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+        weekdays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        cells
+      };
+    }
+
+    function changeCalendarMonth(direction) {
+      const currentKey = state.calendarMonth || (state.activeDate || formatDateKey(new Date())).slice(0, 7);
+      const [yearStr, monthStr] = currentKey.split("-");
+      const base = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+      const next = new Date(base.getFullYear(), base.getMonth() + direction, 1);
+      const nextKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}`;
+      state.calendarMonth = nextKey;
+      saveState(state);
+      render();
+    }
+
     function formatDate(dateKey) {
       const date = new Date(dateKey + "T00:00:00");
       return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
@@ -1354,13 +1563,18 @@
       el.textContent = `${m}:${s}`;
     }
 
+    function switchTab(target) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      const tab = document.querySelector(`.tab[data-view="${target}"]`);
+      if (tab) tab.classList.add("active");
+      document.querySelectorAll(".view").forEach(view => view.style.display = "none");
+      const activeView = document.getElementById(`view-${target}`);
+      if (activeView) activeView.style.display = "block";
+    }
+
     document.querySelectorAll(".tab").forEach(tab => {
       tab.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        const target = tab.dataset.view;
-        document.querySelectorAll(".view").forEach(view => view.style.display = "none");
-        document.getElementById(`view-${target}`).style.display = "block";
+        switchTab(tab.dataset.view);
       });
     });
 

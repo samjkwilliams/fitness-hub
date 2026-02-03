@@ -1020,13 +1020,17 @@
               <div></div>
             ` : `
               <button class="calendar-cell ${cell.isToday ? "today" : ""} ${cell.hasLog ? "has-log" : ""} ${cell.isSelected ? "selected" : ""}"
-                onclick="setActiveDateAndOpen('${cell.dateKey}')">
+                onclick="setActiveDate('${cell.dateKey}')">
                 <div>${cell.day}</div>
                 ${cell.hasLog ? '<div class="dot"></div>' : ''}
               </button>
             `).join("")}
           </div>
           <div class="inline-note" style="margin-top:8px">Tap a day to log or edit that date.</div>
+        </div>
+        <div class="card">
+          <h2>Selected Day</h2>
+          ${renderSelectedDaySummary()}
         </div>
         <div class="card">
           <h2>Workout History</h2>
@@ -1276,11 +1280,6 @@
       render();
     }
 
-    function setActiveDateAndOpen(value) {
-      setActiveDate(value);
-      switchTab("today");
-    }
-
     function goToToday() {
       const todayKey = formatDateKey(new Date());
       state.activeDate = todayKey;
@@ -1482,6 +1481,43 @@
         if (i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       });
       ctx.stroke();
+    }
+
+    function renderSelectedDaySummary() {
+      const dateKey = state.activeDate || formatDateKey(new Date());
+      const log = state.logs[dateKey];
+      const summary = log ? buildWorkoutSummary(log) : null;
+
+      if (!log) {
+        return `
+          <div class="inline-note">No workout logged for ${formatDate(dateKey)}.</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary" onclick="switchTab('today')">Go to Day</button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="row" style="justify-content: space-between">
+          <div>
+            <div class="inline-note">${formatDate(dateKey)}</div>
+            <div>${log.programName || ""} · ${log.workoutName || ""}</div>
+          </div>
+          <span class="tag">${formatVolume(log.totalVolume ?? calculateVolume(log))}</span>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <span class="pill">Sets: ${summary?.totalSets ?? 0}</span>
+          ${summary?.prHighlights?.length ? `<span class="pill">PRs: ${summary.prHighlights.length}</span>` : ""}
+        </div>
+        <div style="margin-top:10px">
+          ${(summary?.exerciseVolumes || []).slice(0, 3).map(item => `
+            <div class="inline-note">${item.name}: ${Math.round(item.volume)} lb</div>
+          `).join("") || '<div class="inline-note">No logged volume yet.</div>'}
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" onclick="switchTab('today')">Go to Day</button>
+        </div>
+      `;
     }
 
     function buildCalendar(activeDate) {

@@ -125,6 +125,12 @@
       box-shadow: none;
     }
 
+    .btn.active-filter {
+      color: var(--text);
+      border-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(77,210,255,0.2);
+    }
+
     .btn:active { transform: scale(0.98); }
 
     .tabs {
@@ -383,7 +389,183 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.2.0";
+    const APP_VERSION = "v3.3.0";
+
+    const CATEGORIES = [
+      "All",
+      "Favorites",
+      "Hypertrophy",
+      "Powerlifting",
+      "Powerbuilding",
+      "Strength",
+      "Bodyweight",
+      "General"
+    ];
+
+    const TOP_PROGRAMS = [
+      // Hypertrophy (top 10)
+      {
+        id: "top-hyp-reddit-ppl",
+        name: "Reddit PPL",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/Template PPL Coolcicada _Fixed 4_16_20_ _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "phul-4",
+        name: "PHUL",
+        category: "Powerbuilding",
+        source: "Built-in",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-phat",
+        name: "PHAT",
+        category: "Powerbuilding",
+        source: "Spreadsheet",
+        file: "Powerlifting/PHAT Workout Log TEMPLATE _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-israetel",
+        name: "Mike Israetel 5 Week Hypertrophy",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/Dr. Mike Israetel Training Volume Landmarks Hypertrophy Routine _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-bigcoachd",
+        name: "BigCoachD 8 Week Hypertrophy",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/8 Week Hypertrophy Block - BigCoachD _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-starscream",
+        name: "Starscream 12 Week Hypertrophy",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/Starscream (autoregulated hypertrophy program) _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-rippedbody-int",
+        name: "Ripped Body Intermediate Bodybuilding",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/Ripped Body Intermediate Bodybuilding Routine _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-strong-curves",
+        name: "Strong Curves",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Powerlifting/Bootyful Beginnings - Strong Curves Spreadsheets _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-gzclp-hyp",
+        name: "GZCLP for Hypertrophy",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/GZCLP for Hypertrophy - 4 Day _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-hyp-gironda-8x8",
+        name: "Vince Gironda 8x8",
+        category: "Hypertrophy",
+        source: "Spreadsheet",
+        file: "Hypertrophy/[4 Day - Advanced] Vince Gironda 8x8 Workout Routine Spreadsheet _ LiftVault.com_.xlsx",
+        tag: "Top 10"
+      },
+
+      // Powerlifting (top 10)
+      {
+        id: "top-pl-calgary",
+        name: "Calgary Barbell 8/16 Week",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/16 Week Complete Program - Calgary Barbell.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-bullmastiff",
+        name: "Bullmastiff",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Bullmastiff Strength Program (Empire Barbell) - LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-sheiko",
+        name: "Sheiko Programs",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Hypertrophy/Sheiko Modified Hypertrophy v4.0 _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-candito",
+        name: "Candito 6 Week",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Candito 6 Week Intermediate + Advanced Bench Program Combined (old version) _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-juggernaut",
+        name: "Juggernaut Method",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Inverse-Juggernaut-Blank-Template _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-nuckols",
+        name: "Greg Nuckols Beginner Powerlifting",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Greg Nuckols General Beginner Powerlifting Program - LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-nsuns",
+        name: "nSuns LP",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/nSuns Linear Progression (LP) Complete Bundle (4 Day, 5 Day, 6 Day squat, 6 Day deadlift) _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-531",
+        name: "Wendler 5/3/1",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Wendler 5_3_1 Spreadsheet _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-texas",
+        name: "Texas Method",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/Texas Method Spreadsheet _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      },
+      {
+        id: "top-pl-gzclp",
+        name: "GZCLP",
+        category: "Powerlifting",
+        source: "Spreadsheet",
+        file: "Powerlifting/v4_5b5 GZCLP 3-4 Day 12-Week _ LiftVault.com.xlsx",
+        tag: "Top 10"
+      }
+    ];
 
     const curatedPrograms = [
       {
@@ -727,6 +909,53 @@
       return { name, exercises };
     }
 
+    function inferCategory(program) {
+      const name = (program.name || "").toLowerCase();
+      if (name.includes("x-frame") || name.includes("hypertrophy") || name.includes("bodybuilding") || name.includes("ppl") || name.includes("phat")) {
+        return "Hypertrophy";
+      }
+      if (name.includes("powerlifting") || name.includes("calgary") || name.includes("sheiko") || name.includes("nsuns") || name.includes("texas method")) {
+        return "Powerlifting";
+      }
+      if (name.includes("phul") || name.includes("power") || name.includes("strength_hypertrophy")) {
+        return "Powerbuilding";
+      }
+      if (name.includes("stronglifts") || name.includes("5x5") || name.includes("strength")) {
+        return "Strength";
+      }
+      if (name.includes("bodyweight") || name.includes("calisthenics")) {
+        return "Bodyweight";
+      }
+      return "General";
+    }
+
+    function buildProgramCatalog() {
+      const topMap = new Map(TOP_PROGRAMS.map(program => [program.id, program]));
+      const builtIns = state.programs.map(program => ({
+        id: program.id,
+        name: program.name,
+        focus: program.focus,
+        daysCount: program.days.length,
+        category: program.category || inferCategory(program),
+        source: program.source || "Built-in",
+        templateOnly: false,
+        tag: topMap.get(program.id)?.tag || "Included"
+      }));
+
+      const topPrograms = TOP_PROGRAMS.filter(program => program.source === "Spreadsheet").map(program => ({
+        ...program,
+        focus: program.category,
+        daysCount: null,
+        templateOnly: program.source === "Spreadsheet"
+      }));
+
+      const unique = new Map();
+      [...builtIns, ...topPrograms].forEach(program => {
+        unique.set(program.id, program);
+      });
+      return Array.from(unique.values());
+    }
+
     function loadState() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -736,20 +965,33 @@
           parsed.activeDate = parsed.activeDate || new Date().toISOString().slice(0, 10);
           parsed.units = parsed.units || "lb";
           parsed.calendarMonth = parsed.calendarMonth || parsed.activeDate.slice(0, 7);
+          parsed.favorites = parsed.favorites || [];
+          parsed.programFilter = parsed.programFilter || "All";
+          parsed.programs = (parsed.programs || []).map(program => ({
+            ...program,
+            category: program.category || inferCategory(program),
+            source: program.source || "Built-in"
+          }));
           return parsed;
         } catch (err) {
           console.warn("Failed to parse storage", err);
         }
       }
       return {
-        programs: curatedPrograms,
+        programs: curatedPrograms.map(program => ({
+          ...program,
+          category: inferCategory(program),
+          source: "Built-in"
+        })),
         activeProgramId: curatedPrograms[0].id,
         programStart: new Date().toISOString().slice(0, 10),
         logs: {},
         dayOverrides: {},
         activeDate: new Date().toISOString().slice(0, 10),
         units: "lb",
-        calendarMonth: new Date().toISOString().slice(0, 7)
+        calendarMonth: new Date().toISOString().slice(0, 7),
+        favorites: [],
+        programFilter: "All"
       };
     }
 
@@ -952,23 +1194,49 @@
 
     function renderPrograms() {
       const view = document.getElementById("view-programs");
+      const catalog = buildProgramCatalog();
+      const favorites = new Set(state.favorites || []);
+      const filter = state.programFilter || "All";
+      const visible = catalog.filter(program => {
+        if (filter === "All") return true;
+        if (filter === "Favorites") return favorites.has(program.id);
+        return program.category === filter;
+      });
+      const sorted = visible.sort((a, b) => {
+        const aFav = favorites.has(a.id) ? 1 : 0;
+        const bFav = favorites.has(b.id) ? 1 : 0;
+        if (aFav !== bFav) return bFav - aFav;
+        return a.name.localeCompare(b.name);
+      });
       view.innerHTML = `
         <div class="card">
           <h2>Programs</h2>
           <p class="inline-note">Choose a program and set a new start date. Programs are curated to match top app UX: simple templates, quick logging, and repeatable progress.</p>
+          <div class="row" style="margin-top:10px">
+            ${CATEGORIES.map(category => `
+              <button class="btn ghost ${filter === category ? "active-filter" : ""}" onclick="setProgramFilter('${category}')">${category}</button>
+            `).join("")}
+          </div>
         </div>
         <div class="grid">
-          ${state.programs.map(program => `
+          ${sorted.map(program => `
             <div class="program">
               <h3>${program.name}</h3>
-              <p>${program.focus}</p>
+              <p>${program.focus || program.category}</p>
               <div class="row">
-                <span class="badge">${program.days.length} days</span>
+                ${program.daysCount ? `<span class="badge">${program.daysCount} days</span>` : '<span class="badge">Template</span>'}
+                <span class="badge">${program.category}</span>
+                ${program.tag ? `<span class="badge">${program.tag}</span>` : ""}
                 ${program.id === state.activeProgramId ? '<span class="badge" style="color:var(--good)">Active</span>' : ''}
               </div>
+              ${program.file ? `<div class="inline-note">Source: ${program.file}</div>` : ""}
               <div class="row" style="margin-top:8px">
-                <button class="btn" onclick="setActiveProgram('${program.id}')">Set Active</button>
-                <button class="btn secondary" onclick="previewProgram('${program.id}')">Preview</button>
+                ${program.templateOnly
+                  ? `<button class="btn ghost" onclick="alert('This program is stored as a spreadsheet. Importing full workouts is the next step.')">Spreadsheet Only</button>`
+                  : `<button class="btn" onclick="setActiveProgram('${program.id}')">Set Active</button>
+                     <button class="btn secondary" onclick="previewProgram('${program.id}')">Preview</button>`
+                }
+                <button class="btn secondary" onclick="toggleFavorite('${program.id}')">${favorites.has(program.id) ? "★ Favorite" : "☆ Favorite"}</button>
               </div>
             </div>
           `).join("")}
@@ -1263,6 +1531,24 @@
     function setActiveProgram(programId) {
       state.activeProgramId = programId;
       state.programStart = getTodayKey();
+      saveState(state);
+      render();
+    }
+
+    function toggleFavorite(programId) {
+      const favorites = new Set(state.favorites || []);
+      if (favorites.has(programId)) {
+        favorites.delete(programId);
+      } else {
+        favorites.add(programId);
+      }
+      state.favorites = Array.from(favorites);
+      saveState(state);
+      render();
+    }
+
+    function setProgramFilter(category) {
+      state.programFilter = category;
       saveState(state);
       render();
     }

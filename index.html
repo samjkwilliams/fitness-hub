@@ -389,12 +389,13 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.3.0";
+    const APP_VERSION = "v3.7.0";
 
     const CATEGORIES = [
       "All",
       "Favorites",
       "Hypertrophy",
+      "Bodybuilding",
       "Powerlifting",
       "Powerbuilding",
       "Strength",
@@ -402,170 +403,10 @@
       "General"
     ];
 
-    const TOP_PROGRAMS = [
-      // Hypertrophy (top 10)
-      {
-        id: "top-hyp-reddit-ppl",
-        name: "Reddit PPL",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/Template PPL Coolcicada _Fixed 4_16_20_ _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "phul-4",
-        name: "PHUL",
-        category: "Powerbuilding",
-        source: "Built-in",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-phat",
-        name: "PHAT",
-        category: "Powerbuilding",
-        source: "Spreadsheet",
-        file: "Powerlifting/PHAT Workout Log TEMPLATE _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-israetel",
-        name: "Mike Israetel 5 Week Hypertrophy",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/Dr. Mike Israetel Training Volume Landmarks Hypertrophy Routine _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-bigcoachd",
-        name: "BigCoachD 8 Week Hypertrophy",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/8 Week Hypertrophy Block - BigCoachD _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-starscream",
-        name: "Starscream 12 Week Hypertrophy",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/Starscream (autoregulated hypertrophy program) _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-rippedbody-int",
-        name: "Ripped Body Intermediate Bodybuilding",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/Ripped Body Intermediate Bodybuilding Routine _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-strong-curves",
-        name: "Strong Curves",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Powerlifting/Bootyful Beginnings - Strong Curves Spreadsheets _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-gzclp-hyp",
-        name: "GZCLP for Hypertrophy",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/GZCLP for Hypertrophy - 4 Day _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-hyp-gironda-8x8",
-        name: "Vince Gironda 8x8",
-        category: "Hypertrophy",
-        source: "Spreadsheet",
-        file: "Hypertrophy/[4 Day - Advanced] Vince Gironda 8x8 Workout Routine Spreadsheet _ LiftVault.com_.xlsx",
-        tag: "Top 10"
-      },
+    const TOP_PROGRAMS = [];
 
-      // Powerlifting (top 10)
-      {
-        id: "top-pl-calgary",
-        name: "Calgary Barbell 8/16 Week",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/16 Week Complete Program - Calgary Barbell.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-bullmastiff",
-        name: "Bullmastiff",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Bullmastiff Strength Program (Empire Barbell) - LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-sheiko",
-        name: "Sheiko Programs",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Hypertrophy/Sheiko Modified Hypertrophy v4.0 _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-candito",
-        name: "Candito 6 Week",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Candito 6 Week Intermediate + Advanced Bench Program Combined (old version) _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-juggernaut",
-        name: "Juggernaut Method",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Inverse-Juggernaut-Blank-Template _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-nuckols",
-        name: "Greg Nuckols Beginner Powerlifting",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Greg Nuckols General Beginner Powerlifting Program - LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-nsuns",
-        name: "nSuns LP",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/nSuns Linear Progression (LP) Complete Bundle (4 Day, 5 Day, 6 Day squat, 6 Day deadlift) _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-531",
-        name: "Wendler 5/3/1",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Wendler 5_3_1 Spreadsheet _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-texas",
-        name: "Texas Method",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/Texas Method Spreadsheet _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      },
-      {
-        id: "top-pl-gzclp",
-        name: "GZCLP",
-        category: "Powerlifting",
-        source: "Spreadsheet",
-        file: "Powerlifting/v4_5b5 GZCLP 3-4 Day 12-Week _ LiftVault.com.xlsx",
-        tag: "Top 10"
-      }
-    ];
+    
+
 
     const curatedPrograms = [
       {
@@ -679,6 +520,7 @@
         id: "stronglifts-5x5",
         name: "StrongLifts 5x5",
         focus: "Simple strength progression",
+        tag: "Popular",
         days: [
           workout("Workout A", [
             ex("Back Squat", 5, "5", 180),
@@ -693,32 +535,136 @@
         ]
       },
       {
+        id: "starting-strength",
+        name: "Starting Strength Novice",
+        focus: "Linear progression strength",
+        tag: "Popular",
+        days: [
+          workout("Workout A", [
+            ex("Back Squat", 3, "5", 180),
+            ex("Press", 3, "5", 180),
+            ex("Deadlift", 1, "5", 180)
+          ]),
+          workout("Workout B", [
+            ex("Back Squat", 3, "5", 180),
+            ex("Bench Press", 3, "5", 180),
+            ex("Power Clean", 5, "3", 180)
+          ])
+        ]
+      },
+      {
+        id: "gzclp-template",
+        name: "GZCLP Template (4-Day)",
+        focus: "Powerlifting-oriented linear progression",
+        tag: "Popular",
+        days: [
+          workout("Day 1", [
+            ex("T1 Squat", 3, "5+", 180),
+            ex("T2 Bench Press", 3, "10+", 120),
+            ex("T3 Lat Pulldown", 3, "15+", 90)
+          ]),
+          workout("Day 2", [
+            ex("T1 Bench Press", 3, "5+", 180),
+            ex("T2 Deadlift", 3, "10+", 150),
+            ex("T3 Barbell Row", 3, "15+", 90)
+          ]),
+          workout("Day 3", [
+            ex("T1 Deadlift", 3, "5+", 180),
+            ex("T2 Overhead Press", 3, "10+", 120),
+            ex("T3 Lat Pulldown", 3, "15+", 90)
+          ]),
+          workout("Day 4", [
+            ex("T1 Overhead Press", 3, "5+", 180),
+            ex("T2 Back Squat", 3, "10+", 150),
+            ex("T3 Barbell Row", 3, "15+", 90)
+          ])
+        ]
+      },
+      {
         id: "phul-4",
         name: "PHUL (4-day)",
         focus: "Power + Hypertrophy split",
+        tag: "Popular",
         days: [
           workout("Upper Power", [
-            ex("Bench Press", 4, "3-5", 180),
-            ex("Row (Barbell)", 4, "3-5", 180),
-            ex("Overhead Press", 3, "5-8", 150),
-            ex("Pull-Up", 3, "5-8", 150)
+            ex("Bench Press", 3, "3-5", 180),
+            ex("Incline DB Press", 3, "6-10", 150),
+            ex("Bent Over Row", 3, "3-5", 180),
+            ex("Lat Pulldown", 3, "6-10", 120),
+            ex("Overhead Press", 2, "5-8", 150),
+            ex("Barbell Curl", 2, "6-10", 90),
+            ex("Skull Crushers", 2, "6-10", 90)
           ]),
           workout("Lower Power", [
-            ex("Back Squat", 4, "3-5", 180),
+            ex("Back Squat", 3, "3-5", 180),
             ex("Deadlift", 3, "3-5", 180),
-            ex("Leg Press", 3, "6-10", 120)
+            ex("Leg Press", 3, "10-15", 120),
+            ex("Leg Curl", 3, "6-10", 90),
+            ex("Calf Raise", 4, "6-10", 90)
           ]),
           workout("Upper Hypertrophy", [
-            ex("Incline Bench", 4, "8-12", 120),
-            ex("Lat Pulldown", 4, "10-12", 90),
-            ex("Dumbbell Shoulder Press", 3, "10-12", 90),
-            ex("Cable Fly", 3, "12-15", 60)
+            ex("Incline Bench Press", 3, "8-12", 120),
+            ex("DB Bench Press", 3, "8-12", 120),
+            ex("Seated Cable Row", 3, "8-12", 90),
+            ex("One-Arm DB Row", 3, "8-12", 90),
+            ex("DB Lateral Raise", 3, "8-12", 60),
+            ex("Incline DB Curl", 3, "8-12", 60),
+            ex("Cable Tricep Extension", 3, "8-12", 60)
           ]),
           workout("Lower Hypertrophy", [
-            ex("Front Squat", 4, "8-12", 150),
-            ex("Romanian Deadlift", 3, "10-12", 120),
-            ex("Leg Curl", 3, "12-15", 60),
-            ex("Calf Raise", 4, "12-15", 60)
+            ex("Front Squat", 3, "8-12", 150),
+            ex("Leg Press", 3, "12-15", 120),
+            ex("Leg Extension", 3, "10-15", 60),
+            ex("Leg Curl", 3, "10-15", 60),
+            ex("Seated Calf Raise", 3, "8-12", 60),
+            ex("Calf Press", 3, "12-15", 60)
+          ])
+        ]
+      },
+      {
+        id: "ms-push-pull-legs",
+        name: "Push/Pull/Legs (5-day, M&S)",
+        focus: "Hypertrophy with strength days",
+        tag: "Popular",
+        days: [
+          workout("Push (Strength)", [
+            ex("Bench Press", 3, "4-6", 150),
+            ex("Incline DB Press", 3, "4-6", 150),
+            ex("Seated Shoulder Press", 3, "4-6", 150),
+            ex("Side Lateral Raise", 2, "8-10", 60),
+            ex("Skullcrushers", 2, "8-10", 60),
+            ex("Abs", 3, "10-15", 60)
+          ]),
+          workout("Pull (Strength)", [
+            ex("Deadlift", 3, "4-6", 180),
+            ex("Barbell Row", 3, "4-6", 150),
+            ex("Wide Grip Pull-Up", 2, "8-10", 120),
+            ex("Seated Cable Row", 2, "8-10", 90),
+            ex("Barbell Curl", 3, "8-10", 60),
+            ex("Hammer Curl", 2, "8-10", 60)
+          ]),
+          workout("Push (Hypertrophy)", [
+            ex("DB Bench Press", 3, "10-12", 90),
+            ex("Incline DB Press", 3, "10-12", 90),
+            ex("Machine Shoulder Press", 3, "10-12", 90),
+            ex("Side Lateral Raise", 2, "15-20", 60),
+            ex("Tricep Pressdown", 3, "10-12", 60),
+            ex("Abs", 3, "10-15", 60)
+          ]),
+          workout("Pull (Hypertrophy)", [
+            ex("Rack Pull", 3, "10-12", 120),
+            ex("Lat Pulldown", 3, "10-12", 90),
+            ex("Seated Cable Row", 3, "10-12", 90),
+            ex("DB Shrugs", 3, "10-12", 90),
+            ex("EZ-Bar Curl", 2, "10-12", 60),
+            ex("Incline DB Curl", 2, "10-12", 60)
+          ]),
+          workout("Legs", [
+            ex("Back Squat", 4, "6-10", 150),
+            ex("Leg Press", 3, "10-12", 120),
+            ex("Leg Extension", 2, "15-20", 60),
+            ex("Leg Curl", 2, "10-12", 60),
+            ex("Seated Calf Raise", 3, "10-12", 60)
           ])
         ]
       },
@@ -899,10 +845,506 @@
           ])
         ]
       }
+
+      },
+      {
+        id: "arnold-split-6",
+        name: "Arnold Split (Classic 6-day)",
+        focus: "Classic bodybuilding split: chest/back, shoulders/arms, legs (repeat)",
+        tag: "Classic",
+        days: [
+          workout("Chest & Back A", [
+            ex("Bench Press", 4, "8-12", 120),
+            ex("Incline Bench Press", 4, "8-12", 120),
+            ex("Dumbbell Pullover", 3, "10-12", 90),
+            ex("Weighted Chin-Up", 3, "8-10", 120),
+            ex("Barbell Row", 4, "8-12", 120),
+            ex("Deadlift", 3, "6-8", 180)
+          ]),
+          workout("Shoulders & Arms A", [
+            ex("Overhead Press", 4, "8-12", 120),
+            ex("Lateral Raise", 4, "10-15", 60),
+            ex("Upright Row", 3, "10-12", 90),
+            ex("Barbell Curl", 4, "8-12", 90),
+            ex("Incline DB Curl", 3, "10-12", 60),
+            ex("EZ-Bar Skullcrusher", 4, "8-12", 90),
+            ex("Triceps Pressdown", 3, "10-12", 60)
+          ]),
+          workout("Legs & Low Back A", [
+            ex("Back Squat", 4, "8-12", 150),
+            ex("Leg Press", 4, "10-15", 120),
+            ex("Leg Curl", 3, "10-12", 90),
+            ex("Romanian Deadlift", 3, "8-10", 120),
+            ex("Standing Calf Raise", 4, "12-15", 60),
+            ex("Seated Calf Raise", 3, "12-15", 60),
+            ex("Abs", 3, "15-20", 45)
+          ]),
+          workout("Chest & Back B", [
+            ex("Incline Bench Press", 4, "8-12", 120),
+            ex("Flat DB Press", 4, "8-12", 120),
+            ex("Cable Fly", 3, "12-15", 60),
+            ex("Pull-Up", 3, "8-10", 120),
+            ex("Chest Supported Row", 4, "8-12", 120),
+            ex("Rack Pull", 3, "6-8", 180)
+          ]),
+          workout("Shoulders & Arms B", [
+            ex("DB Shoulder Press", 4, "8-12", 90),
+            ex("Rear Delt Fly", 3, "12-15", 60),
+            ex("Lateral Raise", 3, "12-15", 60),
+            ex("EZ-Bar Curl", 4, "8-12", 90),
+            ex("Hammer Curl", 3, "10-12", 60),
+            ex("Close-Grip Bench Press", 4, "8-12", 120),
+            ex("Overhead Triceps Ext", 3, "10-12", 60)
+          ]),
+          workout("Legs & Low Back B", [
+            ex("Front Squat", 4, "6-10", 150),
+            ex("Hack Squat", 3, "10-12", 120),
+            ex("Leg Extension", 3, "12-15", 60),
+            ex("Romanian Deadlift", 3, "8-10", 120),
+            ex("Standing Calf Raise", 4, "12-15", 60),
+            ex("Seated Calf Raise", 3, "12-15", 60),
+            ex("Abs", 3, "15-20", 45)
+          ])
+        ]
+      },
+      {
+        id: "arnold-golden-six",
+        name: "Arnold Golden Six",
+        focus: "Full-body classic: 3x/week, simple progression",
+        tag: "Classic",
+        days: [
+          workout("Golden Six A", [
+            ex("Barbell Squat", 4, "10", 120),
+            ex("Bench Press", 3, "10", 120),
+            ex("Chin-Up", 3, "AMRAP", 120),
+            ex("Behind-the-Neck Press", 4, "10", 120),
+            ex("Barbell Curl", 3, "10", 90),
+            ex("Bent-Knee Sit-Up", 3, "20+", 45)
+          ]),
+          workout("Golden Six B", [
+            ex("Barbell Squat", 4, "10", 120),
+            ex("Bench Press", 3, "10", 120),
+            ex("Chin-Up", 3, "AMRAP", 120),
+            ex("Behind-the-Neck Press", 4, "10", 120),
+            ex("Barbell Curl", 3, "10", 90),
+            ex("Bent-Knee Sit-Up", 3, "20+", 45)
+          ]),
+          workout("Golden Six C", [
+            ex("Barbell Squat", 4, "10", 120),
+            ex("Bench Press", 3, "10", 120),
+            ex("Chin-Up", 3, "AMRAP", 120),
+            ex("Behind-the-Neck Press", 4, "10", 120),
+            ex("Barbell Curl", 3, "10", 90),
+            ex("Bent-Knee Sit-Up", 3, "20+", 45)
+          ])
+        ]
+      },
+      {
+        id: "bwf-recommended",
+        name: "Bodyweight Fitness Recommended Routine",
+        focus: "Full-body bodyweight strength with progressions (3x/week)",
+        tag: "Bodyweight",
+        days: [
+          workout("Recommended Routine A", [
+            ex("Pull-Up Progression", 3, "5-8", 90),
+            ex("Squat Progression", 3, "5-8", 90),
+            ex("Dip Progression", 3, "5-8", 90),
+            ex("Hinge Progression", 3, "5-8", 90),
+            ex("Row Progression", 3, "5-8", 90),
+            ex("Push-Up Progression", 3, "5-8", 90),
+            ex("Plank", 3, "30-45s", 45),
+            ex("Pallof Press", 3, "8-12", 45),
+            ex("Reverse Hyperextension", 3, "8-12", 45)
+          ]),
+          workout("Recommended Routine B", [
+            ex("Pull-Up Progression", 3, "5-8", 90),
+            ex("Squat Progression", 3, "5-8", 90),
+            ex("Dip Progression", 3, "5-8", 90),
+            ex("Hinge Progression", 3, "5-8", 90),
+            ex("Row Progression", 3, "5-8", 90),
+            ex("Push-Up Progression", 3, "5-8", 90),
+            ex("Plank", 3, "30-45s", 45),
+            ex("Pallof Press", 3, "8-12", 45),
+            ex("Reverse Hyperextension", 3, "8-12", 45)
+          ]),
+          workout("Recommended Routine C", [
+            ex("Pull-Up Progression", 3, "5-8", 90),
+            ex("Squat Progression", 3, "5-8", 90),
+            ex("Dip Progression", 3, "5-8", 90),
+            ex("Hinge Progression", 3, "5-8", 90),
+            ex("Row Progression", 3, "5-8", 90),
+            ex("Push-Up Progression", 3, "5-8", 90),
+            ex("Plank", 3, "30-45s", 45),
+            ex("Pallof Press", 3, "8-12", 45),
+            ex("Reverse Hyperextension", 3, "8-12", 45)
+          ])
+        ]
+      },
+      {
+        id: "omar-pull-up",
+        name: "Omar Isuf Pull-Up Focus",
+        focus: "Bodyweight pull-up specialization (3x/week)",
+        tag: "Influencer",
+        days: [
+          workout("Pull-Up Volume", [
+            ex("Pull-Up (RIR 2)", 5, "4-8", 90),
+            ex("Negative Pull-Up", 3, "5", 90),
+            ex("Scapular Pull-Up", 3, "8-12", 60),
+            ex("Dead Hang", 3, "30-45s", 60)
+          ]),
+          workout("Pull-Up Intensity", [
+            ex("Weighted Pull-Up (RIR 2)", 6, "3-5", 120),
+            ex("Chin-Up", 3, "6-10", 90),
+            ex("Isometric Top Hold", 3, "10-20s", 60),
+            ex("Face Pull", 3, "12-15", 60)
+          ]),
+          workout("Pull-Up Density", [
+            ex("Pull-Up (EMOM)", 10, "2-4", 60),
+            ex("Inverted Row", 3, "8-12", 60),
+            ex("Biceps Curl", 3, "10-12", 60),
+            ex("Hollow Hold", 3, "20-40s", 45)
+          ])
+        ]
+      },
+      {
+        id: "candito-6-week",
+        name: "Candito 6-Week Strength (Peaking)",
+        focus: "Peaking template (periodized weekly blocks — see guide for %s)",
+        tag: "Peaking",
+        days: [
+          workout("Day 1: Squat + Bench", [
+            ex("Back Squat", 3, "3-6", 180),
+            ex("Bench Press", 3, "3-6", 150),
+            ex("Leg Press", 3, "8-12", 120),
+            ex("Row (Barbell)", 3, "8-12", 120)
+          ]),
+          workout("Day 2: Deadlift + Bench", [
+            ex("Deadlift", 3, "3-5", 180),
+            ex("Bench Press", 3, "6-8", 150),
+            ex("Hip Hinge Accessory", 3, "8-12", 120),
+            ex("Lat Pulldown", 3, "8-12", 90)
+          ]),
+          workout("Day 3: Squat Volume + Upper", [
+            ex("Back Squat", 4, "6-8", 150),
+            ex("Overhead Press", 3, "6-8", 120),
+            ex("Lunge", 3, "8-10", 90),
+            ex("DB Row", 3, "10-12", 90)
+          ]),
+          workout("Day 4: Deadlift Technique + Upper", [
+            ex("Deadlift", 4, "4-6", 180),
+            ex("Close-Grip Bench Press", 3, "6-8", 120),
+            ex("Hamstring Curl", 3, "10-12", 60),
+            ex("Pull-Up", 3, "6-10", 120)
+          ])
+        ]
+      },
+      {
+        id: "smolov-jr",
+        name: "Smolov Jr. (Squat or Bench)",
+        focus: "3-week peaking block with high frequency",
+        tag: "Peaking",
+        days: [
+          workout("Day 1", [
+            ex("Main Lift", 6, "6", 180, [], 70)
+          ]),
+          workout("Day 2", [
+            ex("Main Lift", 7, "5", 180, [], 75)
+          ]),
+          workout("Day 3", [
+            ex("Main Lift", 8, "4", 180, [], 80)
+          ]),
+          workout("Day 4", [
+            ex("Main Lift", 10, "3", 180, [], 85)
+          ])
+        ]
+      },
+      {
+        id: "ed-coan-peaking",
+        name: "Ed Coan 12-Week Peaking (Template)",
+        focus: "Peaking template (use spreadsheet %s and weekly scheme)",
+        tag: "Peaking",
+        days: [
+          workout("Squat Focus", [
+            ex("Back Squat", 3, "3-5", 180),
+            ex("Paused Squat", 3, "3-5", 180),
+            ex("Leg Press", 3, "8-12", 120),
+            ex("Hamstring Curl", 3, "10-12", 60)
+          ]),
+          workout("Bench Focus", [
+            ex("Bench Press", 3, "3-5", 180),
+            ex("Close-Grip Bench Press", 3, "5-8", 150),
+            ex("Row (Barbell)", 3, "8-12", 120),
+            ex("Triceps Pressdown", 3, "10-12", 60)
+          ]),
+          workout("Deadlift Focus", [
+            ex("Deadlift", 3, "3-5", 180),
+            ex("Deficit Deadlift", 3, "3-5", 180),
+            ex("RDL", 3, "8-10", 120),
+            ex("Lat Pulldown", 3, "8-12", 90)
+          ])
+        ]
+      },
+      {
+        id: "coan-phillipi-deadlift",
+        name: "Coan/Phillipi Deadlift Peak (10-week)",
+        focus: "Deadlift peak: heavy triple + speed triples + accessories",
+        tag: "Peaking",
+        days: [
+          workout("Deadlift Day", [
+            ex("Deadlift (Top Set)", 1, "2-3", 180),
+            ex("Speed Deadlift", 8, "3", 90),
+            ex("Barbell Shrug", 3, "10", 90),
+            ex("Bent-Over Row", 3, "8", 90),
+            ex("Good Morning", 3, "8", 90),
+            ex("Chin-Up", 3, "8", 90)
+          ])
+        ]
+      },
+      {
+        id: "kizen-powerbuilding",
+        name: "Kizen Powerbuilding (4-week preview)",
+        focus: "Powerbuilding blend: big 3 + accessories (Omar Isuf/Silent Mike)",
+        tag: "Influencer",
+        days: [
+          workout("Squat Focus", [
+            ex("Back Squat", 4, "4-6", 180),
+            ex("Front Squat", 3, "6-8", 150),
+            ex("Leg Press", 3, "10-12", 120),
+            ex("Leg Curl", 3, "10-12", 60)
+          ]),
+          workout("Bench Focus", [
+            ex("Bench Press", 4, "4-6", 180),
+            ex("Incline Bench Press", 3, "6-8", 150),
+            ex("DB Row", 3, "8-12", 90),
+            ex("Triceps Pressdown", 3, "10-12", 60)
+          ]),
+          workout("Deadlift Focus", [
+            ex("Deadlift", 3, "3-5", 180),
+            ex("RDL", 3, "6-8", 150),
+            ex("Pull-Up", 3, "6-10", 120),
+            ex("Hamstring Curl", 3, "10-12", 60)
+          ]),
+          workout("Upper Accessories", [
+            ex("Overhead Press", 3, "6-8", 120),
+            ex("Lateral Raise", 3, "12-15", 60),
+            ex("Lat Pulldown", 3, "8-12", 90),
+            ex("Biceps Curl", 3, "10-12", 60)
+          ]),
+          workout("Lower Accessories", [
+            ex("Front Squat", 3, "6-8", 150),
+            ex("Hip Thrust", 3, "8-10", 120),
+            ex("Calf Raise", 4, "10-15", 60),
+            ex("Abs", 3, "12-15", 45)
+          ]),
+          workout("Hypertrophy Upper", [
+            ex("Incline DB Press", 3, "8-12", 90),
+            ex("Seated Cable Row", 3, "8-12", 90),
+            ex("Lateral Raise", 3, "12-15", 60),
+            ex("Triceps Extension", 3, "10-12", 60)
+          ])
+        ]
+      },
+      {
+        id: "jeff-nippard-inspired",
+        name: "Jeff Nippard Upper/Lower (Inspired)",
+        focus: "Inspired template (not gospel): upper/lower + weak points day",
+        tag: "Inspired",
+        days: [
+          workout("Upper 1", [
+            ex("Bench Press", 4, "6-8", 150),
+            ex("Row (Barbell)", 4, "6-8", 150),
+            ex("Incline DB Press", 3, "8-12", 120),
+            ex("Lat Pulldown", 3, "8-12", 90),
+            ex("Lateral Raise", 3, "12-15", 60),
+            ex("Triceps Pressdown", 3, "10-12", 60)
+          ]),
+          workout("Lower 1", [
+            ex("Back Squat", 4, "6-8", 180),
+            ex("Romanian Deadlift", 3, "8-10", 120),
+            ex("Leg Press", 3, "10-12", 120),
+            ex("Leg Curl", 3, "12-15", 60),
+            ex("Calf Raise", 4, "10-15", 60)
+          ]),
+          workout("Upper 2", [
+            ex("Overhead Press", 4, "6-8", 120),
+            ex("Pull-Up", 3, "6-10", 120),
+            ex("DB Bench Press", 3, "8-12", 120),
+            ex("Seated Cable Row", 3, "8-12", 90),
+            ex("Biceps Curl", 3, "10-12", 60),
+            ex("Rear Delt Fly", 3, "12-15", 60)
+          ]),
+          workout("Lower 2", [
+            ex("Deadlift", 3, "3-5", 180),
+            ex("Front Squat", 3, "6-8", 150),
+            ex("Hip Thrust", 3, "8-10", 120),
+            ex("Leg Extension", 3, "12-15", 60),
+            ex("Calf Raise", 4, "10-15", 60)
+          ]),
+          workout("Weak Points + Arms", [
+            ex("Lateral Raise", 4, "12-20", 60),
+            ex("Incline DB Curl", 3, "10-12", 60),
+            ex("Triceps Extension", 3, "10-12", 60),
+            ex("Abs", 3, "12-15", 45)
+          ])
+        ]
+      },
+      {
+        id: "alan-thrall-inspired",
+        name: "Alan Thrall Strength + Strongman (Inspired)",
+        focus: "Inspired template (not gospel): strength base + strongman add-ons",
+        tag: "Inspired",
+        days: [
+          workout("Day 1: Squat + Press", [
+            ex("Back Squat", 5, "3-5", 180),
+            ex("Overhead Press", 4, "5-8", 120),
+            ex("Chin-Up", 3, "6-10", 120),
+            ex("Farmer Carry", 4, "40-60m", 120)
+          ]),
+          workout("Day 2: Deadlift + Bench", [
+            ex("Deadlift", 4, "3-5", 180),
+            ex("Bench Press", 4, "5-8", 150),
+            ex("Barbell Row", 3, "6-10", 120),
+            ex("Sandbag Carry", 4, "30-50m", 120)
+          ]),
+          workout("Day 3: Strongman Accessories", [
+            ex("Push Press", 4, "5-8", 120),
+            ex("Front Squat", 3, "6-8", 150),
+            ex("Sled Push", 6, "20-30m", 120),
+            ex("Yoke Walk", 4, "20-30m", 180)
+          ])
+        ]
+      },
+      {
+        id: "dorian-yates-blood-guts",
+        name: "Dorian Yates Blood & Guts",
+        focus: "High-intensity 4-day split (low volume, train to failure)",
+        tag: "IFBB",
+        days: [
+          workout("Shoulders + Triceps", [
+            ex("Overhead Press", 2, "6-10", 120),
+            ex("Lateral Raise", 2, "8-12", 60),
+            ex("Rear Delt Fly", 2, "8-12", 60),
+            ex("Close-Grip Bench Press", 2, "6-10", 120),
+            ex("Triceps Pressdown", 2, "8-12", 60)
+          ]),
+          workout("Back", [
+            ex("Pull-Up", 2, "6-10", 120),
+            ex("Barbell Row", 2, "6-10", 120),
+            ex("Lat Pulldown", 2, "8-12", 90),
+            ex("Deadlift", 2, "6-8", 180)
+          ]),
+          workout("Chest + Biceps", [
+            ex("Incline Bench Press", 2, "6-10", 150),
+            ex("Bench Press", 2, "6-10", 150),
+            ex("DB Fly", 2, "8-12", 60),
+            ex("Barbell Curl", 2, "6-10", 90),
+            ex("Incline DB Curl", 2, "8-12", 60)
+          ]),
+          workout("Legs + Calves", [
+            ex("Leg Extension", 2, "10-15", 60),
+            ex("Leg Press", 2, "8-12", 120),
+            ex("Squat (Machine)", 2, "8-10", 150),
+            ex("Leg Curl", 2, "8-12", 60),
+            ex("Standing Calf Raise", 2, "10-15", 60)
+          ])
+        ]
+      },
+      {
+        id: "cut-like-cutler",
+        name: "Cut Like Cutler (12-week split)",
+        focus: "Jay Cutler-inspired split: legs/calves, chest/abs, back/calves, shoulders/traps, arms/abs",
+        tag: "IFBB",
+        days: [
+          workout("Legs + Calves", [
+            ex("Back Squat", 4, "6-10", 150),
+            ex("Leg Press", 4, "10-12", 120),
+            ex("Leg Extension", 3, "12-15", 60),
+            ex("Leg Curl", 3, "10-12", 60),
+            ex("Standing Calf Raise", 4, "12-15", 60)
+          ]),
+          workout("Chest + Abs", [
+            ex("Bench Press", 4, "6-10", 150),
+            ex("Incline DB Press", 3, "8-12", 120),
+            ex("Cable Fly", 3, "12-15", 60),
+            ex("Abs", 4, "12-20", 45)
+          ]),
+          workout("Back + Calves", [
+            ex("Deadlift", 3, "4-6", 180),
+            ex("Barbell Row", 4, "8-10", 120),
+            ex("Lat Pulldown", 3, "8-12", 90),
+            ex("Seated Cable Row", 3, "10-12", 90),
+            ex("Seated Calf Raise", 4, "12-15", 60)
+          ]),
+          workout("Shoulders + Traps", [
+            ex("Overhead Press", 4, "6-10", 120),
+            ex("Lateral Raise", 3, "12-15", 60),
+            ex("Rear Delt Fly", 3, "12-15", 60),
+            ex("Shrug", 4, "10-12", 90)
+          ]),
+          workout("Arms + Abs", [
+            ex("Barbell Curl", 4, "8-12", 90),
+            ex("Incline DB Curl", 3, "10-12", 60),
+            ex("Close-Grip Bench Press", 4, "8-12", 120),
+            ex("Triceps Pressdown", 3, "10-12", 60),
+            ex("Abs", 4, "12-20", 45)
+          ])
+        ]
+      },
+      {
+        id: "ronnie-back-bis",
+        name: "Ronnie Coleman Back & Biceps (Signature)",
+        focus: "Signature IFBB workout (back + biceps day)",
+        tag: "IFBB",
+        days: [
+          workout("Back & Biceps", [
+            ex("Close Grip Pulldown", 5, "8-12", 90),
+            ex("T-Bar Row", 5, "8-12", 120),
+            ex("Machine Row", 4, "8-12", 120),
+            ex("DB Row", 4, "8-12", 120),
+            ex("Cable Curl", 4, "12-15", 60),
+            ex("DB Curl", 4, "12-15", 60)
+          ])
+        ]
+      },
+      {
+        id: "phil-heath-fst7",
+        name: "Phil Heath FST-7 (Inspired)",
+        focus: "Inspired template (not gospel): FST-7 finisher on isolation moves",
+        tag: "Inspired",
+        days: [
+          workout("Chest", [
+            ex("Bench Press", 4, "6-8", 150),
+            ex("Incline DB Press", 3, "8-12", 120),
+            ex("Chest Fly (FST-7)", 7, "8-12", 45)
+          ]),
+          workout("Back", [
+            ex("Barbell Row", 4, "6-8", 120),
+            ex("Lat Pulldown", 3, "8-12", 90),
+            ex("Straight-Arm Pulldown (FST-7)", 7, "8-12", 45)
+          ]),
+          workout("Shoulders", [
+            ex("Overhead Press", 4, "6-8", 120),
+            ex("Lateral Raise", 3, "10-12", 60),
+            ex("Cable Lateral Raise (FST-7)", 7, "8-12", 45)
+          ]),
+          workout("Arms", [
+            ex("Barbell Curl", 3, "8-12", 60),
+            ex("Triceps Pressdown", 3, "8-12", 60),
+            ex("Cable Curl (FST-7)", 7, "8-12", 45)
+          ]),
+          workout("Legs", [
+            ex("Back Squat", 4, "6-8", 150),
+            ex("Leg Press", 3, "10-12", 120),
+            ex("Leg Extension (FST-7)", 7, "10-12", 45)
+          ])
+        ]
+      }
     ];
 
-    function ex(name, sets, reps, rest, alternatives = []) {
-      return { name, sets, reps, rest, notes: "", alternatives };
+    const CURATED_PROGRAM_IDS = new Set(curatedPrograms.map(program => program.id));
+
+    function ex(name, sets, reps, rest, alternatives = [], percent = null) {
+      return { name, sets, reps, rest, notes: "", alternatives, percent };
     }
 
     function workout(name, exercises) {
@@ -911,16 +1353,19 @@
 
     function inferCategory(program) {
       const name = (program.name || "").toLowerCase();
-      if (name.includes("x-frame") || name.includes("hypertrophy") || name.includes("bodybuilding") || name.includes("ppl") || name.includes("phat")) {
+      if (name.includes("bodybuilding") || name.includes("ifbb") || name.includes("olympia") || name.includes("arnold") || name.includes("blood and guts")) {
+        return "Bodybuilding";
+      }
+      if (name.includes("x-frame") || name.includes("hypertrophy") || name.includes("ppl") || name.includes("phat")) {
         return "Hypertrophy";
       }
-      if (name.includes("powerlifting") || name.includes("calgary") || name.includes("sheiko") || name.includes("nsuns") || name.includes("texas method")) {
+      if (name.includes("powerlifting") || name.includes("peaking") || name.includes("smolov") || name.includes("coan") || name.includes("candito") || name.includes("calgary") || name.includes("sheiko") || name.includes("nsuns") || name.includes("texas method") || name.includes("gzclp")) {
         return "Powerlifting";
       }
-      if (name.includes("phul") || name.includes("power") || name.includes("strength_hypertrophy")) {
+      if (name.includes("phul") || name.includes("powerbuilding") || name.includes("strength_hypertrophy")) {
         return "Powerbuilding";
       }
-      if (name.includes("stronglifts") || name.includes("5x5") || name.includes("strength")) {
+      if (name.includes("starting strength") || name.includes("stronglifts") || name.includes("5x5") || name.includes("strength")) {
         return "Strength";
       }
       if (name.includes("bodyweight") || name.includes("calisthenics")) {
@@ -930,7 +1375,6 @@
     }
 
     function buildProgramCatalog() {
-      const topMap = new Map(TOP_PROGRAMS.map(program => [program.id, program]));
       const builtIns = state.programs.map(program => ({
         id: program.id,
         name: program.name,
@@ -939,21 +1383,9 @@
         category: program.category || inferCategory(program),
         source: program.source || "Built-in",
         templateOnly: false,
-        tag: topMap.get(program.id)?.tag || "Included"
+        tag: program.tag || "Included"
       }));
-
-      const topPrograms = TOP_PROGRAMS.filter(program => program.source === "Spreadsheet").map(program => ({
-        ...program,
-        focus: program.category,
-        daysCount: null,
-        templateOnly: program.source === "Spreadsheet"
-      }));
-
-      const unique = new Map();
-      [...builtIns, ...topPrograms].forEach(program => {
-        unique.set(program.id, program);
-      });
-      return Array.from(unique.values());
+      return builtIns;
     }
 
     function loadState() {
@@ -965,13 +1397,15 @@
           parsed.activeDate = parsed.activeDate || new Date().toISOString().slice(0, 10);
           parsed.units = parsed.units || "lb";
           parsed.calendarMonth = parsed.calendarMonth || parsed.activeDate.slice(0, 7);
-          parsed.favorites = parsed.favorites || [];
+          parsed.favorites = (parsed.favorites || []).filter(id => CURATED_PROGRAM_IDS.has(id));
           parsed.programFilter = parsed.programFilter || "All";
-          parsed.programs = (parsed.programs || []).map(program => ({
-            ...program,
-            category: program.category || inferCategory(program),
-            source: program.source || "Built-in"
-          }));
+          parsed.programs = (parsed.programs || [])
+            .filter(program => CURATED_PROGRAM_IDS.has(program.id))
+            .map(program => ({
+              ...program,
+              category: program.category || inferCategory(program),
+              source: program.source || "Built-in"
+            }));
           return parsed;
         } catch (err) {
           console.warn("Failed to parse storage", err);
@@ -1133,10 +1567,17 @@
       const history = getExerciseHistory(selectedName, 3);
       const pr = getExercisePR(selectedName, getTodayKey());
       const last = history[0];
-      const currentBest = getBestSet(log?.exercises?.[exIndex]?.sets || []);
+      const logExercise = log?.exercises?.[exIndex];
+      const currentBest = getBestSet(logExercise?.sets || []);
       const hasNewPR = currentBest && (!pr || currentBest.e1rm > pr.best1rm);
       const lastLine = last ? `Last: ${last.weight} x ${last.reps} (${formatDate(last.date)})` : "No history yet";
       const prLine = pr ? `PR 1RM: ${pr.best1rm.toFixed(1)}` : "PR 1RM: --";
+      const targetPercent = getTargetPercent(exercise, logExercise);
+      const trainingMax = targetPercent ? getTrainingMaxInfo(selectedName, getTodayKey()) : null;
+      const suggestedWeight = (targetPercent && trainingMax) ? roundToIncrement(trainingMax.e1rm * (targetPercent / 100)) : null;
+      const trainingLine = targetPercent
+        ? (trainingMax ? `${trainingMax.source} 1RM: ${trainingMax.e1rm.toFixed(1)} ${(state.units || "lb")} (${formatDate(trainingMax.date)})` : "No 1RM data yet. Log a set to get suggestions.")
+        : "";
 
       const alternatives = exercise.alternatives || [];
       const options = [exercise.name, ...alternatives];
@@ -1166,6 +1607,22 @@
               <select onchange="updateExerciseSelection(${exIndex}, this.value)">
                 ${buildSelectOptions(options, selectedName)}
               </select>
+            </div>
+          ` : ""}
+          ${targetPercent === null ? `
+            <div class="row" style="margin-top:8px">
+              <button class="btn ghost" onclick="promptTargetPercent(${exIndex})">Add % target</button>
+            </div>
+          ` : ""}
+          ${targetPercent !== null ? `
+            <div style="margin-top:10px">
+              <label class="inline-note">Target % of 1RM</label>
+              <div class="row">
+                <input type="number" min="1" max="100" value="${targetPercent}" onchange="updateTargetPercent(${exIndex}, this.value)" />
+                ${suggestedWeight ? `<button class="btn ghost" onclick="applySuggestedWeight(${exIndex}, ${suggestedWeight})">Use ${formatWeight(suggestedWeight)}</button>` : ""}
+              </div>
+              <div class="inline-note">${trainingLine}</div>
+              ${suggestedWeight ? `<div class="inline-note">Suggested working weight: ${formatWeight(suggestedWeight)}.</div>` : ""}
             </div>
           ` : ""}
           <div style="margin-top:10px">
@@ -1224,18 +1681,14 @@
               <h3>${program.name}</h3>
               <p>${program.focus || program.category}</p>
               <div class="row">
-                ${program.daysCount ? `<span class="badge">${program.daysCount} days</span>` : '<span class="badge">Template</span>'}
+                <span class="badge">${program.daysCount} days</span>
                 <span class="badge">${program.category}</span>
                 ${program.tag ? `<span class="badge">${program.tag}</span>` : ""}
                 ${program.id === state.activeProgramId ? '<span class="badge" style="color:var(--good)">Active</span>' : ''}
               </div>
-              ${program.file ? `<div class="inline-note">Source: ${program.file}</div>` : ""}
               <div class="row" style="margin-top:8px">
-                ${program.templateOnly
-                  ? `<button class="btn ghost" onclick="alert('This program is stored as a spreadsheet. Importing full workouts is the next step.')">Spreadsheet Only</button>`
-                  : `<button class="btn" onclick="setActiveProgram('${program.id}')">Set Active</button>
-                     <button class="btn secondary" onclick="previewProgram('${program.id}')">Preview</button>`
-                }
+                <button class="btn" onclick="setActiveProgram('${program.id}')">Set Active</button>
+                <button class="btn secondary" onclick="previewProgram('${program.id}')">Preview</button>
                 <button class="btn secondary" onclick="toggleFavorite('${program.id}')">${favorites.has(program.id) ? "★ Favorite" : "☆ Favorite"}</button>
               </div>
             </div>
@@ -1392,6 +1845,7 @@
           exercises: workoutPlan.exercises.map(exercise => ({
             name: exercise.name,
             selectedName: exercise.name,
+            targetPercent: exercise.percent !== null && exercise.percent !== undefined ? exercise.percent : null,
             sets: Array.from({ length: exercise.sets }).map(() => ({ weight: "", reps: "", rpe: "", notes: "", done: false }))
           }))
         };
@@ -1409,6 +1863,40 @@
       const today = getTodayKey();
       state.logs[today].exercises[exIndex].sets[setIndex][field] = value;
       saveState(state);
+    }
+
+    function updateTargetPercent(exIndex, value) {
+      ensureTodayLog();
+      const today = getTodayKey();
+      const cleaned = value === "" ? null : value;
+      state.logs[today].exercises[exIndex].targetPercent = cleaned;
+      saveState(state);
+      render();
+    }
+
+    function promptTargetPercent(exIndex) {
+      ensureTodayLog();
+      const value = prompt("Enter target % of 1RM (e.g. 75):");
+      if (value === null) return;
+      const parsed = parseFloat(value);
+      if (Number.isNaN(parsed) || parsed <= 0) {
+        alert("Please enter a valid percentage.");
+        return;
+      }
+      updateTargetPercent(exIndex, parsed);
+    }
+
+    function applySuggestedWeight(exIndex, weight) {
+      ensureTodayLog();
+      const today = getTodayKey();
+      const sets = state.logs[today].exercises[exIndex].sets;
+      sets.forEach(set => {
+        if (!set.weight) {
+          set.weight = String(weight);
+        }
+      });
+      saveState(state);
+      render();
     }
 
     function fillNextSet(exIndex, weight, reps) {
@@ -1592,6 +2080,19 @@
       return `${Math.round(value * factor)} ${unit}`;
     }
 
+    function roundToIncrement(value) {
+      const unit = state.units || "lb";
+      const increment = unit === "kg" ? 1 : 2.5;
+      return Math.round(value / increment) * increment;
+    }
+
+    function formatWeight(value) {
+      const unit = state.units || "lb";
+      const rounded = roundToIncrement(value);
+      const display = Number.isInteger(rounded) ? rounded : rounded.toFixed(1);
+      return `${display} ${unit}`;
+    }
+
     function updateDayOverride(value) {
       const today = getTodayKey();
       state.dayOverrides = state.dayOverrides || {};
@@ -1679,6 +2180,30 @@
         if (entry.e1rm > best.e1rm) best = entry;
       });
       return { ...best, best1rm: best.e1rm };
+    }
+
+    function getTrainingMaxInfo(exerciseName, excludeDate = null) {
+      const pr = getExercisePR(exerciseName, excludeDate);
+      if (pr) {
+        return { e1rm: pr.best1rm, date: pr.date, source: "PR" };
+      }
+      const history = getExerciseHistory(exerciseName, 1, excludeDate);
+      if (history.length) {
+        return { e1rm: history[0].e1rm, date: history[0].date, source: "Last" };
+      }
+      return null;
+    }
+
+    function getTargetPercent(exercise, logExercise) {
+      const stored = logExercise?.targetPercent;
+      if (stored !== undefined && stored !== null && String(stored).trim() !== "") {
+        const parsed = parseFloat(stored);
+        return Number.isNaN(parsed) ? null : parsed;
+      }
+      if (exercise.percent !== undefined && exercise.percent !== null) {
+        return exercise.percent;
+      }
+      return null;
     }
 
     function renderHistoryPreview(history) {

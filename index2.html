@@ -89,6 +89,9 @@
       flex-wrap: wrap;
       align-items: center;
     }
+    .row > div {
+      min-width: 140px;
+    }
     .day-controls {
       align-items: stretch;
     }
@@ -245,6 +248,12 @@
       background: #0b111a;
       color: var(--text);
       font-size: 12px;
+      max-width: 100%;
+      display: block;
+    }
+    input[type="date"], select {
+      min-height: 44px;
+      box-sizing: border-box;
     }
 
     .set-row {
@@ -402,6 +411,9 @@
       .day-nav {
         flex-direction: column;
       }
+      .row > div {
+        min-width: 100%;
+      }
     }
   </style>
 </head>
@@ -428,7 +440,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.8.4";
+    const APP_VERSION = "v3.9.3";
 
     const CATEGORIES = [
       "All",
@@ -1474,7 +1486,8 @@
         units: "lb",
         calendarMonth: new Date().toISOString().slice(0, 7),
         favorites: [],
-        programFilter: "All"
+        programFilter: "All",
+        backupReminderCount: 0
       };
     }
 
@@ -1483,6 +1496,10 @@
     }
 
     let state = loadState();
+    let storagePersisted = null;
+    const SHORTCUT_BACKUP_NAME = "Fitness Hub Backup";
+    const SHORTCUT_RESTORE_NAME = "Fitness Hub Restore";
+    const SHORTCUT_GUIDE_KEY = "fitness_hub_shortcut_guide_seen";
 
     function showFatalError(message) {
       const existing = document.getElementById("fatal-error");
@@ -1520,6 +1537,36 @@
     window.addEventListener("error", event => {
       showFatalError(event && event.message ? event.message : "Script error");
     });
+
+    function showShortcutGuideOnce() {
+      if (localStorage.getItem(SHORTCUT_GUIDE_KEY)) return;
+      const overlay = document.createElement("div");
+      overlay.id = "shortcut-guide";
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = "rgba(8,12,18,0.92)";
+      overlay.style.color = "var(--text)";
+      overlay.style.zIndex = "9998";
+      overlay.style.padding = "20px";
+      overlay.innerHTML = `
+        <div class="card" style="max-width:520px;margin:40px auto;">
+          <h2>Set up iCloud backup (one-time)</h2>
+          <p class="inline-note">This makes your workouts safe even if Safari clears data.</p>
+          <div class="inline-note" style="margin-top:8px"><strong>Step 1:</strong> Open Shortcuts and create "${SHORTCUT_BACKUP_NAME}". It should save clipboard text to iCloud Drive → FitnessHub → backup.json.</div>
+          <div class="inline-note" style="margin-top:8px"><strong>Step 2:</strong> Create "${SHORTCUT_RESTORE_NAME}". It should read that file and copy it to clipboard.</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" onclick="dismissShortcutGuide()">Got it</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function dismissShortcutGuide() {
+      localStorage.setItem(SHORTCUT_GUIDE_KEY, "1");
+      const overlay = document.getElementById("shortcut-guide");
+      if (overlay) overlay.remove();
+    }
 
     function getActiveProgram() {
       return state.programs.find(p => p.id === state.activeProgramId) || state.programs[0];
@@ -1900,12 +1947,40 @@
               <div class="row">
                 <button class="btn secondary" onclick="exportData()">Export</button>
                 <button class="btn ghost" onclick="importData()">Import</button>
+                <button class="btn ghost" onclick="importFromClipboard()">Import from clipboard</button>
               </div>
             </div>
           </div>
           <div style="margin-top:12px">
             <label class="inline-note">Quick notes</label>
             <textarea id="global-notes" rows="3" placeholder="Anything about your training week…"></textarea>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Backup & Restore</h2>
+          <p class="inline-note">Safari can clear site data when bookmarks are removed or storage is low. Use backups to keep workouts safe across updates.</p>
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary" onclick="downloadBackupFile()">Download backup</button>
+            <button class="btn ghost" onclick="exportData()">Copy backup</button>
+          </div>
+          <div style="margin-top:10px">
+            <label class="inline-note">Restore from file</label>
+            <input type="file" accept="application/json" onchange="importDataFile(this.files && this.files[0])" />
+          </div>
+          <div class="inline-note" style="margin-top:10px">
+            Storage persistence: ${storagePersisted === null ? "Checking…" : (storagePersisted ? "Enabled" : "Not enabled")}
+          </div>
+        </div>
+        <div class="card">
+          <h2>iCloud Shortcut (Optional)</h2>
+          <p class="inline-note">Create two Shortcuts named "${SHORTCUT_BACKUP_NAME}" and "${SHORTCUT_RESTORE_NAME}". The backup shortcut should save clipboard text to iCloud Drive (e.g., FitnessHub/backup.json). The restore shortcut should read that file and copy it to clipboard.</p>
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary" onclick="copyAndOpenBackupShortcut()">Backup to iCloud</button>
+            <button class="btn ghost" onclick="openRestoreShortcut()">Restore from iCloud</button>
+            <button class="btn ghost" onclick="testShortcuts()">Test Shortcut</button>
+          </div>
+          <div class="inline-note" style="margin-top:10px">
+            After running restore, tap “Import from clipboard” above to load your data.
           </div>
         </div>
         <div class="card">
@@ -2060,6 +2135,9 @@
       log.totalVolume = calculateVolume(log);
       log.loggedAt = today;
       log.units = state.units;
+      if (markComplete) {
+        maybeShowBackupReminder();
+      }
       saveState(state);
       render();
     }
@@ -2275,6 +2353,100 @@
         render();
       } catch (err) {
         alert("That didn't look like valid data.");
+      }
+    }
+
+    function importFromClipboard() {
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        alert("Clipboard access isn't available here. Use Import instead.");
+        return;
+      }
+      navigator.clipboard.readText().then(text => {
+        if (!text) {
+          alert("Clipboard is empty.");
+          return;
+        }
+        try {
+          state = JSON.parse(text);
+          saveState(state);
+          render();
+          alert("Backup restored from clipboard.");
+        } catch (err) {
+          alert("Clipboard didn't contain valid backup data.");
+        }
+      }).catch(() => {
+        alert("Clipboard permission was blocked.");
+      });
+    }
+
+    function importDataFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          state = JSON.parse(reader.result);
+          saveState(state);
+          render();
+          alert("Backup restored.");
+        } catch (err) {
+          alert("That file didn't look like valid data.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function copyAndOpenBackupShortcut() {
+      const data = JSON.stringify(state, null, 2);
+      navigator.clipboard.writeText(data).then(() => {
+        const url = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_BACKUP_NAME)}`;
+        window.location.href = url;
+      }).catch(() => {
+        alert("Could not copy data to clipboard.");
+      });
+    }
+
+    function openRestoreShortcut() {
+      const url = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_RESTORE_NAME)}`;
+      window.location.href = url;
+    }
+
+    function testShortcuts() {
+      const testPayload = JSON.stringify({
+        test: true,
+        message: "Fitness Hub Shortcut Test",
+        timestamp: new Date().toISOString()
+      }, null, 2);
+      navigator.clipboard.writeText(testPayload).then(() => {
+        const url = `shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_BACKUP_NAME)}`;
+        window.location.href = url;
+        alert("Test data copied. Run the Backup shortcut, then Restore shortcut, then tap “Import from clipboard”.");
+      }).catch(() => {
+        alert("Could not copy test data to clipboard.");
+      });
+    }
+
+    function maybeShowBackupReminder() {
+      const completedCount = Object.values(state.logs || {}).filter(log => log && log.completed).length;
+      const reminderTarget = 5;
+      const lastReminder = state.backupReminderCount || 0;
+      if (completedCount > 0 && completedCount % reminderTarget === 0 && completedCount !== lastReminder) {
+        state.backupReminderCount = completedCount;
+        saveState(state);
+        alert(`You've completed ${completedCount} workouts. Consider backing up to iCloud or downloading a backup file.`);
+      }
+    }
+
+    function initStoragePersistence() {
+      if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().then(granted => {
+          storagePersisted = granted;
+          render();
+        }).catch(() => {
+          storagePersisted = false;
+          render();
+        });
+      } else {
+        storagePersisted = false;
       }
     }
 
@@ -2605,7 +2777,9 @@
       });
     });
 
+    initStoragePersistence();
     render();
+    showShortcutGuideOnce();
   </script>
 </body>
 </html>

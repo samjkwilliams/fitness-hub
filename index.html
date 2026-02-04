@@ -389,7 +389,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.7.0";
+    const APP_VERSION = "v3.7.1";
 
     const CATEGORIES = [
       "All",
@@ -1397,13 +1397,22 @@
           parsed.calendarMonth = parsed.calendarMonth || parsed.activeDate.slice(0, 7);
           parsed.favorites = (parsed.favorites || []).filter(id => CURATED_PROGRAM_IDS.has(id));
           parsed.programFilter = parsed.programFilter || "All";
-          parsed.programs = (parsed.programs || [])
+          const existing = new Map((parsed.programs || [])
             .filter(program => CURATED_PROGRAM_IDS.has(program.id))
-            .map(program => ({
-              ...program,
-              category: program.category || inferCategory(program),
-              source: program.source || "Built-in"
-            }));
+            .map(program => [
+              program.id,
+              {
+                ...program,
+                category: program.category || inferCategory(program),
+                source: program.source || "Built-in"
+              }
+            ]));
+          parsed.programs = curatedPrograms.map(program => ({
+            ...program,
+            ...(existing.get(program.id) || {}),
+            category: (existing.get(program.id)?.category) || inferCategory(program),
+            source: (existing.get(program.id)?.source) || "Built-in"
+          }));
           return parsed;
         } catch (err) {
           console.warn("Failed to parse storage", err);

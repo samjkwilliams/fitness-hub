@@ -403,7 +403,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.8.0";
+    const APP_VERSION = "v3.8.1";
 
     const CATEGORIES = [
       "All",
@@ -1568,6 +1568,10 @@
               `).join("")}
             </div>
           ` : ""}
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary" onclick="downloadBackupFile()">Backup (file)</button>
+            <button class="btn ghost" onclick="exportData()">Copy backup</button>
+          </div>
         </div>
         ` : ""}
         <div class="card">
@@ -2086,6 +2090,18 @@
     function setActiveDate(value) {
       state.activeDate = value;
       state.calendarMonth = value.slice(0, 7);
+      const log = state.logs?.[value];
+      if (log && log.programId) {
+        const program = state.programs.find(p => p.id === log.programId);
+        if (program) {
+          state.activeProgramId = program.id;
+          const dayIndex = findDayIndexByName(program, log.workoutName);
+          if (dayIndex !== null && dayIndex !== undefined) {
+            state.dayOverrides = state.dayOverrides || {};
+            state.dayOverrides[value] = dayIndex;
+          }
+        }
+      }
       saveState(state);
       render();
     }
@@ -2098,6 +2114,13 @@
       state.calendarMonth = nextKey.slice(0, 7);
       saveState(state);
       render();
+    }
+
+    function findDayIndexByName(program, workoutName) {
+      if (!program || !program.days || !workoutName) return null;
+      const target = workoutName.toLowerCase();
+      const index = program.days.findIndex(day => (day.name || "").toLowerCase() === target);
+      return index === -1 ? null : index;
     }
 
     function goToToday() {
@@ -2157,6 +2180,20 @@
       navigator.clipboard.writeText(data).then(() => {
         alert("Data copied to clipboard. Save it anywhere you like.");
       });
+    }
+
+    function downloadBackupFile() {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const filename = `fitness-hub-backup-${(state.activeDate || formatDateKey(new Date()))}.json`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
     }
 
     function importData() {

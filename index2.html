@@ -403,7 +403,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.8.2";
+    const APP_VERSION = "v3.8.3";
 
     const CATEGORIES = [
       "All",
@@ -1459,6 +1459,43 @@
 
     let state = loadState();
 
+    function showFatalError(message) {
+      const existing = document.getElementById("fatal-error");
+      if (existing) return;
+      const overlay = document.createElement("div");
+      overlay.id = "fatal-error";
+      overlay.style.position = "fixed";
+      overlay.style.inset = "0";
+      overlay.style.background = "rgba(8,12,18,0.95)";
+      overlay.style.color = "var(--text)";
+      overlay.style.zIndex = "9999";
+      overlay.style.padding = "20px";
+      overlay.innerHTML = `
+        <div class="card" style="max-width:520px;margin:40px auto;">
+          <h2>App needs a quick reset</h2>
+          <p class="inline-note">Safari hit a rendering error and needs a clean reset. This will clear local data on this device.</p>
+          <div class="inline-note" style="margin-top:8px;">${escapeHtml(message || "Unknown error")}</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" onclick="resetAppData()">Reset & Reload</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    function resetAppData() {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch (err) {
+        console.warn("Failed to clear storage", err);
+      }
+      location.reload();
+    }
+
+    window.addEventListener("error", event => {
+      showFatalError(event && event.message ? event.message : "Script error");
+    });
+
     function getActiveProgram() {
       return state.programs.find(p => p.id === state.activeProgramId) || state.programs[0];
     }
@@ -1493,11 +1530,16 @@
     }
 
     function render() {
-      updateSubtitle();
-      renderToday();
-      renderPrograms();
-      renderHistory();
-      renderSettings();
+      try {
+        updateSubtitle();
+        renderToday();
+        renderPrograms();
+        renderHistory();
+        renderSettings();
+      } catch (err) {
+        console.error("Render failed", err);
+        showFatalError(err && err.message ? err.message : "Render failed");
+      }
     }
 
     function renderToday() {

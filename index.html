@@ -331,6 +331,10 @@
       font-size: 12px;
       cursor: pointer;
       position: relative;
+      touch-action: manipulation;
+    }
+    .calendar-cell:focus {
+      outline: none;
     }
 
     .calendar-cell.today {
@@ -352,6 +356,16 @@
       left: 50%;
       transform: translateX(-50%);
     }
+    .calendar-cell[data-daytype="chest"] .dot { background: #ff6b6b; }
+    .calendar-cell[data-daytype="back"] .dot { background: #4d96ff; }
+    .calendar-cell[data-daytype="legs"] .dot { background: #f7b731; }
+    .calendar-cell[data-daytype="shoulders"] .dot { background: #a55eea; }
+    .calendar-cell[data-daytype="arms"] .dot { background: #45aaf2; }
+    .calendar-cell[data-daytype="push"] .dot { background: #ff7f50; }
+    .calendar-cell[data-daytype="pull"] .dot { background: #26de81; }
+    .calendar-cell[data-daytype="full"] .dot { background: #20bf6b; }
+    .calendar-cell[data-daytype="upper"] .dot { background: #3867d6; }
+    .calendar-cell[data-daytype="lower"] .dot { background: #fd9644; }
 
     .split {
       display: grid;
@@ -389,7 +403,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.7.1";
+    const APP_VERSION = "v3.8.0";
 
     const CATEGORIES = [
       "All",
@@ -1517,6 +1531,10 @@
             </div>
             ${overridden ? '<button class="btn ghost" onclick="clearDayOverride()">Use schedule</button>' : ''}
           </div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn ghost" onclick="shiftActiveDate(-1)">Previous day</button>
+            <button class="btn ghost" onclick="shiftActiveDate(1)">Next day</button>
+          </div>
         </div>
         <div class="card">
           <h2>${workoutPlan.name}</h2>
@@ -1750,7 +1768,8 @@
               <div></div>
             ` : `
               <button class="calendar-cell ${cell.isToday ? "today" : ""} ${cell.hasLog ? "has-log" : ""} ${cell.isSelected ? "selected" : ""}"
-                onclick="setActiveDate('${cell.dateKey}')">
+                data-daytype="${cell.dayType || ""}"
+                onclick="setActiveDate('${cell.dateKey}'); this.blur();">
                 <div>${cell.day}</div>
                 ${cell.hasLog ? '<div class="dot"></div>' : ''}
               </button>
@@ -1849,6 +1868,7 @@
           programId: program.id,
           programName: program.name,
           workoutName: workoutPlan.name,
+          dayType: getWorkoutTypeLabel(workoutPlan.name),
           exercises: workoutPlan.exercises.map(exercise => ({
             name: exercise.name,
             selectedName: exercise.name,
@@ -1960,6 +1980,9 @@
       const today = getTodayKey();
       const log = state.logs[today];
       log.completed = markComplete;
+      if (!log.dayType) {
+        log.dayType = getWorkoutTypeLabel(log.workoutName || "");
+      }
       log.totalVolume = calculateVolume(log);
       log.loggedAt = today;
       log.units = state.units;
@@ -2063,6 +2086,16 @@
     function setActiveDate(value) {
       state.activeDate = value;
       state.calendarMonth = value.slice(0, 7);
+      saveState(state);
+      render();
+    }
+
+    function shiftActiveDate(deltaDays) {
+      const base = new Date((state.activeDate || formatDateKey(new Date())) + "T00:00:00");
+      base.setDate(base.getDate() + deltaDays);
+      const nextKey = formatDateKey(base);
+      state.activeDate = nextKey;
+      state.calendarMonth = nextKey.slice(0, 7);
       saveState(state);
       render();
     }
@@ -2213,6 +2246,20 @@
       return null;
     }
 
+    function getWorkoutTypeLabel(text) {
+      const name = (text || "").toLowerCase();
+      if (name.includes("full")) return "full";
+      if (name.includes("leg") || name.includes("lower")) return "legs";
+      if (name.includes("chest")) return "chest";
+      if (name.includes("back")) return "back";
+      if (name.includes("shoulder")) return "shoulders";
+      if (name.includes("arm")) return "arms";
+      if (name.includes("push")) return "push";
+      if (name.includes("pull")) return "pull";
+      if (name.includes("upper")) return "upper";
+      return "general";
+    }
+
     function renderHistoryPreview(history) {
       if (!history.length) return "";
       return `
@@ -2361,10 +2408,12 @@
       }
       for (let day = 1; day <= daysInMonth; day += 1) {
         const dateKey = formatDateKey(new Date(year, month, day));
+        const log = state.logs[dateKey];
         cells.push({
           day,
           dateKey,
-          hasLog: Boolean(state.logs[dateKey]),
+          hasLog: Boolean(log),
+          dayType: log?.dayType || getWorkoutTypeLabel(log?.workoutName || ""),
           isToday: dateKey === todayKey,
           isSelected: dateKey === selectedKey,
           disabled: false

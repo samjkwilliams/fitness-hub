@@ -440,7 +440,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.9.3";
+    const APP_VERSION = "v3.9.4";
 
     const CATEGORIES = [
       "All",
@@ -1446,6 +1446,7 @@
           parsed.activeDate = parsed.activeDate || new Date().toISOString().slice(0, 10);
           parsed.units = parsed.units || "lb";
           parsed.calendarMonth = parsed.calendarMonth || parsed.activeDate.slice(0, 7);
+          parsed.historySelectedDate = parsed.historySelectedDate || parsed.activeDate;
           parsed.favorites = (parsed.favorites || []).filter(id => CURATED_PROGRAM_IDS.has(id));
           parsed.programFilter = parsed.programFilter || "All";
           const existing = new Map((parsed.programs || [])
@@ -1487,7 +1488,8 @@
         calendarMonth: new Date().toISOString().slice(0, 7),
         favorites: [],
         programFilter: "All",
-        backupReminderCount: 0
+        backupReminderCount: 0,
+        historySelectedDate: new Date().toISOString().slice(0, 10)
       };
     }
 
@@ -1674,7 +1676,7 @@
           </div>
           <div style="margin-top:10px">
             ${summary.exerciseVolumes.slice(0, 3).map(item => `
-              <div class="inline-note">${item.name}: ${Math.round(item.volume)} lb</div>
+              <div class="inline-note">${item.name}: ${formatVolume(item.volume)}</div>
             `).join("") || '<div class="inline-note">No logged volume yet.</div>'}
           </div>
           ${summary.prHighlights.length ? `
@@ -2237,6 +2239,7 @@
 
     function setActiveDate(value) {
       state.activeDate = value;
+      state.historySelectedDate = value;
       state.calendarMonth = value.slice(0, 7);
       const log = state.logs ? state.logs[value] : undefined;
       if (log && log.programId) {
@@ -2638,7 +2641,7 @@
     }
 
     function renderSelectedDaySummary() {
-      const dateKey = state.activeDate || formatDateKey(new Date());
+      const dateKey = state.historySelectedDate || state.activeDate || formatDateKey(new Date());
       const log = state.logs[dateKey];
       const summary = log ? buildWorkoutSummary(log) : null;
 
@@ -2665,7 +2668,7 @@
         </div>
         <div style="margin-top:10px">
           ${((summary && summary.exerciseVolumes) ? summary.exerciseVolumes : []).slice(0, 3).map(item => `
-            <div class="inline-note">${item.name}: ${Math.round(item.volume)} lb</div>
+            <div class="inline-note">${item.name}: ${formatVolume(item.volume)}</div>
           `).join("") || '<div class="inline-note">No logged volume yet.</div>'}
         </div>
         <div class="row" style="margin-top:10px">
@@ -2683,7 +2686,7 @@
       const startDay = firstDay.getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const todayKey = formatDateKey(new Date());
-      const selectedKey = state.activeDate || todayKey;
+      const selectedKey = state.historySelectedDate || state.activeDate || todayKey;
 
       const cells = [];
       for (let i = 0; i < startDay; i += 1) {

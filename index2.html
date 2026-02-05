@@ -416,6 +416,7 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 </head>
 <body>
   <div class="app">
@@ -440,7 +441,9 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v3.9.4";
+    const APP_VERSION = "v4.0.0";
+    const SUPABASE_URL = "https://woivsrogrzfeffprclzq.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zRmks64cYPLkKgC3EGzkzg_fBmy81V1";
 
     const CATEGORIES = [
       "All",
@@ -1502,6 +1505,10 @@
     const SHORTCUT_BACKUP_NAME = "Fitness Hub Backup";
     const SHORTCUT_RESTORE_NAME = "Fitness Hub Restore";
     const SHORTCUT_GUIDE_KEY = "fitness_hub_shortcut_guide_seen";
+    let supabaseClient = null;
+    let supabaseUser = null;
+    let syncStatus = "Not connected";
+    let syncInProgress = false;
 
     function showFatalError(message) {
       const existing = document.getElementById("fatal-error");
@@ -1986,6 +1993,25 @@
           </div>
         </div>
         <div class="card">
+          <h2>Cloud Sync (Supabase)</h2>
+          <p class="inline-note">Optional multi-device sync for up to ~50 users. Each user signs in by email.</p>
+          <div class="row" style="margin-top:10px">
+            <div style="flex:1">
+              <label class="inline-note">Email</label>
+              <input type="email" id="cloud-email" placeholder="you@example.com" />
+            </div>
+            <div class="row">
+              <button class="btn secondary" onclick="cloudSignIn()">Send login link</button>
+              <button class="btn ghost" onclick="cloudSignOut()">Sign out</button>
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn ghost" onclick="syncNow()">Sync now</button>
+            <span class="inline-note">${syncStatus}</span>
+          </div>
+          <div class="inline-note" style="margin-top:10px">After clicking the email link, return to this app and tap “Sync now”.</div>
+        </div>
+        <div class="card">
           <h2>App Version</h2>
           <div class="inline-note">You are viewing build ${APP_VERSION}.</div>
         </div>
@@ -2137,10 +2163,21 @@
       log.totalVolume = calculateVolume(log);
       log.loggedAt = today;
       log.units = state.units;
+      log.updatedAt = new Date().toISOString();
       if (markComplete) {
         maybeShowBackupReminder();
       }
       saveState(state);
+      if (supabaseUser) {
+        syncPush().then(() => {
+          syncStatus = `Synced ${new Date().toLocaleTimeString()}`;
+          render();
+        }).catch(err => {
+          console.error(err);
+          syncStatus = "Sync failed";
+          render();
+        });
+      }
       render();
     }
 
@@ -2451,6 +2488,148 @@
       } else {
         storagePersisted = false;
       }
+    }
+
+    function initSupabase() {
+      if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !window.supabase) {
+        return;
+      }
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      supabaseClient.auth.getSession().then(({ data }) => {
+        supabaseUser = data.session ? data.session.user : null;
+        syncStatus = supabaseUser ? `Signed in as ${supabaseUser.email}` : "Not signed in";
+        render();
+      });
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        supabaseUser = session ? session.user : null;
+        syncStatus = supabaseUser ? `Signed in as ${supabaseUser.email}` : "Not signed in";
+        render();
+      });
+    }
+
+    function cloudSignIn() {
+      if (!supabaseClient) {
+        alert("Supabase client not initialized.");
+        return;
+      }
+      const input = document.getElementById("cloud-email");
+      const email = input ? input.value.trim() : "";
+      if (!email) {
+        alert("Enter an email address.");
+        return;
+      }
+      syncStatus = "Sending login link…";
+      render();
+      supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href }
+      }).then(({ error }) => {
+        if (error) {
+          syncStatus = "Login failed. Check email.";
+          alert(error.message);
+        } else {
+          syncStatus = "Check your email for the login link.";
+        }
+        render();
+      });
+    }
+
+    function cloudSignOut() {
+      if (!supabaseClient) return;
+      supabaseClient.auth.signOut().then(() => {
+        supabaseUser = null;
+        syncStatus = "Signed out";
+        render();
+      });
+    }
+
+    function syncNow() {
+      if (!supabaseClient || !supabaseUser) {
+        alert("Sign in to sync.");
+        return;
+      }
+      if (syncInProgress) return;
+      syncInProgress = true;
+      syncStatus = "Syncing…";
+      render();
+      syncPull().then(() => syncPush()).then(() => {
+        syncStatus = `Last sync: ${new Date().toLocaleTimeString()}`;
+        syncInProgress = false;
+        render();
+      }).catch(err => {
+        console.error(err);
+        syncStatus = "Sync failed";
+        syncInProgress = false;
+        render();
+      });
+    }
+
+    function normalizeLog(log, dateKey) {
+      const updatedAt = log.updatedAt || new Date().toISOString();
+      return {
+        ...log,
+        updatedAt,
+        loggedAt: log.loggedAt || dateKey,
+        units: log.units || state.units
+      };
+    }
+
+    function syncPull() {
+      return supabaseClient
+        .from("workouts")
+        .select("workout_date,data")
+        .eq("user_id", supabaseUser.id)
+        .then(({ data, error }) => {
+          if (error) throw error;
+          const rows = data || [];
+          rows.forEach(row => {
+            const dateKey = row.workout_date;
+            const remote = row.data || {};
+            const local = state.logs[dateKey];
+            if (!local || (remote.updatedAt && (!local.updatedAt || remote.updatedAt > local.updatedAt))) {
+              state.logs[dateKey] = remote;
+            }
+          });
+          saveState(state);
+        });
+    }
+
+    function syncPush() {
+      const entries = Object.entries(state.logs || {});
+      if (entries.length === 0) return Promise.resolve();
+      return supabaseClient
+        .from("workouts")
+        .select("workout_date")
+        .eq("user_id", supabaseUser.id)
+        .then(({ data, error }) => {
+          if (error) throw error;
+          const existingDates = new Set((data || []).map(row => row.workout_date));
+          const inserts = [];
+          const updates = [];
+          entries.forEach(([dateKey, log]) => {
+            const normalized = normalizeLog(log, dateKey);
+            if (existingDates.has(dateKey)) {
+              updates.push({ workout_date: dateKey, data: normalized });
+            } else {
+              inserts.push({ user_id: supabaseUser.id, workout_date: dateKey, data: normalized });
+            }
+          });
+          const insertPromise = inserts.length
+            ? supabaseClient.from("workouts").insert(inserts)
+            : Promise.resolve({ error: null });
+          const updatePromise = updates.length
+            ? Promise.all(updates.map(item =>
+                supabaseClient.from("workouts")
+                  .update({ data: item.data })
+                  .eq("user_id", supabaseUser.id)
+                  .eq("workout_date", item.workout_date)
+              ))
+            : Promise.resolve();
+          return insertPromise.then(({ error: insertError }) => {
+            if (insertError) throw insertError;
+            return updatePromise;
+          });
+        });
     }
 
     function getSelectedExerciseName(exIndex, exercise, log) {
@@ -2781,6 +2960,7 @@
     });
 
     initStoragePersistence();
+    initSupabase();
     render();
     showShortcutGuideOnce();
   </script>

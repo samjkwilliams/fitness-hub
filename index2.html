@@ -394,6 +394,40 @@
       gap: 10px;
     }
 
+
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      background: rgba(8,12,18,0.96);
+      z-index: 9997;
+      display: none;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .auth-gate.active { display: block; }
+    .auth-card {
+      max-width: 520px;
+      margin: 40px auto;
+    }
+    .auth-card h2 { margin: 0 0 10px; }
+    .auth-card .inline-note { margin-top: 8px; }
+    .auth-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .auth-actions .btn { flex: 1; }
+    .verify-banner {
+      background: rgba(255,176,32,0.15);
+      border: 1px solid rgba(255,176,32,0.4);
+      color: #ffd48a;
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
     @media (max-width: 720px) {
       .split { grid-template-columns: 1fr; }
       .set-row { grid-template-columns: 26px 1fr 1fr; grid-template-rows: auto auto; }
@@ -419,6 +453,30 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+  <div id="auth-gate" class="auth-gate">
+    <div class="card auth-card">
+      <h2>Sign in to Fitness Hub</h2>
+      <p class="inline-note">Create an account to sync your workouts across devices.</p>
+      <div style="margin-top:12px">
+        <label class="inline-note">Display name</label>
+        <input type="text" id="auth-name" placeholder="Your name" />
+      </div>
+      <div style="margin-top:12px">
+        <label class="inline-note">Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" />
+      </div>
+      <div style="margin-top:10px">
+        <label class="inline-note">Password</label>
+        <input type="password" id="auth-password" placeholder="At least 8 characters" />
+      </div>
+      <div class="auth-actions">
+        <button class="btn" onclick="authSignUp()">Create account</button>
+        <button class="btn secondary" onclick="authSignIn()">Sign in</button>
+        <button class="btn ghost" onclick="authResetPassword()">Forgot password</button>
+      </div>
+      <div class="inline-note" id="auth-status" style="margin-top:10px"></div>
+    </div>
+  </div>
   <div class="app">
     <header>
       <h1>Fitness Hub</h1>
@@ -441,7 +499,7 @@
 
   <script>
     const STORAGE_KEY = "fitness_hub_v1";
-    const APP_VERSION = "v4.0.0";
+    const APP_VERSION = "v4.2.0";
     const SUPABASE_URL = "https://woivsrogrzfeffprclzq.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zRmks64cYPLkKgC3EGzkzg_fBmy81V1";
 
@@ -1612,6 +1670,7 @@
 
     function render() {
       try {
+        updateAuthGate();
         updateSubtitle();
         renderToday();
         renderPrograms();
@@ -1634,6 +1693,7 @@
       const summary = isCompleted ? buildWorkoutSummary(log) : null;
 
       view.innerHTML = `
+        ${renderVerifyBanner()}
         <div class="card">
           <h2>Today · ${formatDate(todayKey)}</h2>
           <div class="row">
@@ -1994,22 +2054,14 @@
         </div>
         <div class="card">
           <h2>Cloud Sync (Supabase)</h2>
-          <p class="inline-note">Optional multi-device sync for up to ~50 users. Each user signs in by email.</p>
-          <div class="row" style="margin-top:10px">
-            <div style="flex:1">
-              <label class="inline-note">Email</label>
-              <input type="email" id="cloud-email" placeholder="you@example.com" />
-            </div>
-            <div class="row">
-              <button class="btn secondary" onclick="cloudSignIn()">Send login link</button>
-              <button class="btn ghost" onclick="cloudSignOut()">Sign out</button>
-            </div>
-          </div>
+          <p class="inline-note">Your account keeps workouts synced across devices.</p>
+          ${renderVerifyBanner()}
           <div class="row" style="margin-top:10px">
             <button class="btn ghost" onclick="syncNow()">Sync now</button>
+            <button class="btn ghost" onclick="cloudSignOut()">Sign out</button>
+            <button class="btn ghost" onclick="resendVerification()">Resend verification</button>
             <span class="inline-note">${syncStatus}</span>
           </div>
-          <div class="inline-note" style="margin-top:10px">After clicking the email link, return to this app and tap “Sync now”.</div>
         </div>
         <div class="card">
           <h2>App Version</h2>
@@ -2490,6 +2542,114 @@
       }
     }
 
+
+    function renderVerifyBanner() {
+      if (!supabaseUser) return "";
+      if (supabaseUser.email_confirmed_at) return "";
+      return `<div class="verify-banner">Your email is not verified yet. You can keep using the app, but we recommend verifying for account recovery.</div>`;
+    }
+
+    function updateAuthGate() {
+      const gate = document.getElementById("auth-gate");
+      if (!gate) return;
+      if (!supabaseClient) {
+        gate.classList.add("active");
+        const status = document.getElementById("auth-status");
+        if (status) status.textContent = "Initializing sign-in…";
+        return;
+      }
+      if (supabaseUser) {
+        gate.classList.remove("active");
+      } else {
+        gate.classList.add("active");
+      }
+    }
+
+    function authSignUp() {
+      if (!supabaseClient) return;
+      const name = (document.getElementById("auth-name") || {}).value || "";
+      const email = (document.getElementById("auth-email") || {}).value || "";
+      const password = (document.getElementById("auth-password") || {}).value || "";
+      const status = document.getElementById("auth-status");
+      if (!email || !password) {
+        if (status) status.textContent = "Enter email and password.";
+        return;
+      }
+      if (status) status.textContent = "Creating account…";
+      supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.href,
+          data: { display_name: name || undefined }
+        }
+      }).then(({ error, data }) => {
+        if (error) {
+          if (status) status.textContent = error.message;
+          return;
+        }
+        if (data && data.session) {
+          if (status) status.textContent = "Account created. You are signed in.";
+        } else {
+          if (status) status.textContent = "Account created. Check email for verification if required.";
+        }
+      });
+    }
+
+
+    function authResetPassword() {
+      if (!supabaseClient) return;
+      const email = (document.getElementById("auth-email") || {}).value || "";
+      const status = document.getElementById("auth-status");
+      if (!email) {
+        if (status) status.textContent = "Enter your email to reset password.";
+        return;
+      }
+      if (status) status.textContent = "Sending reset email…";
+      supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.href
+      }).then(({ error }) => {
+        if (error) {
+          if (status) status.textContent = error.message;
+        } else if (status) {
+          status.textContent = "Password reset email sent.";
+        }
+      });
+    }
+
+    function resendVerification() {
+      if (!supabaseClient || !supabaseUser) return;
+      const email = supabaseUser.email;
+      supabaseClient.auth.resend({
+        type: "signup",
+        email
+      }).then(({ error }) => {
+        if (error) {
+          alert(error.message);
+        } else {
+          alert("Verification email sent.");
+        }
+      });
+    }
+    function authSignIn() {
+      if (!supabaseClient) return;
+      const name = (document.getElementById("auth-name") || {}).value || "";
+      const email = (document.getElementById("auth-email") || {}).value || "";
+      const password = (document.getElementById("auth-password") || {}).value || "";
+      const status = document.getElementById("auth-status");
+      if (!email || !password) {
+        if (status) status.textContent = "Enter email and password.";
+        return;
+      }
+      if (status) status.textContent = "Signing in…";
+      supabaseClient.auth.signInWithPassword({ email, password }).then(({ error }) => {
+        if (error) {
+          if (status) status.textContent = error.message;
+        } else if (status) {
+          status.textContent = "Signed in.";
+        }
+      });
+    }
     function initSupabase() {
       if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !window.supabase) {
         return;
@@ -2499,11 +2659,13 @@
         supabaseUser = data.session ? data.session.user : null;
         syncStatus = supabaseUser ? `Signed in as ${supabaseUser.email}` : "Not signed in";
         render();
+        updateAuthGate();
       });
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         supabaseUser = session ? session.user : null;
         syncStatus = supabaseUser ? `Signed in as ${supabaseUser.email}` : "Not signed in";
         render();
+        updateAuthGate();
       });
     }
 
@@ -2540,6 +2702,7 @@
         supabaseUser = null;
         syncStatus = "Signed out";
         render();
+        updateAuthGate();
       });
     }
 
